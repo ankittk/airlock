@@ -1,0 +1,59 @@
+# Contributing to Airlock
+
+Thanks for considering a contribution. Keep changes small and testable.
+
+## Code of Conduct
+
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## Before you open an issue
+
+1. Search existing issues.
+2. Reproduce on latest `main` with `go test ./...` / a minimal CLI repro.
+3. For security issues, follow [SECURITY.md](SECURITY.md) — never file publicly.
+
+## Development setup
+
+```bash
+git clone https://github.com/ankittk/airlock.git
+cd airlock
+go test ./... -count=1
+go build -o airlock ./cmd/airlock
+```
+
+Requires Go 1.25+. Optional: [golangci-lint](https://golangci-lint.run/) v2 (`golangci-lint run ./...`).
+
+## Pull requests
+
+1. Fork and branch from `main` (`feat/…`, `fix/…`).
+2. One concern per PR.
+3. Add or update tests for non-trivial logic.
+4. Run before push:
+
+```bash
+go test ./... -count=1 -race
+golangci-lint run ./...
+go build -o airlock ./cmd/airlock
+```
+
+5. Fill the PR template: **why**, what changed, how you tested.
+6. Do not commit `.airlock/`, built `airlock` binaries, or secrets.
+
+## Releases
+
+Maintainers: see [docs/RELEASING.md](docs/RELEASING.md). Tag `v*` on `main` → Release workflow publishes binaries for `install.sh`.
+
+## Scope guidance
+
+| Good fits | Usually out of scope (open an issue first) |
+|-----------|--------------------------------------------|
+| Bug fixes, docs, fixtures | Cloud control plane / SSO (Phase 5–6) |
+| Eval / policy / stats improvements | Full Model Sentinel (Phase 4) |
+| Discovery: skills, Cursor rules, APM / Promptfoo / OTel | Competing with APM install-time features |
+| CI gate / approval hardening | Every framework plugin at once |
+
+Airlock **imports** APM lockfiles; it does not re-implement APM resolution. Roadmap: [README — Status & roadmap](README.md#status--roadmap).
+
+## License
+
+Contributions are licensed under the project [Apache License 2.0](LICENSE).
