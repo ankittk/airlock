@@ -14,16 +14,13 @@ bin_dir() {
 }
 
 need_cmd() {
-  command -v "$1" >/dev/null 2>&1 || {
-    echo "error: need '$1' on PATH" >&2
-    exit 1
-  }
+  command -v "$1" >/dev/null 2>&1 || return 1
 }
 
 install_from_release() {
-  need_cmd curl
-  need_cmd tar
-  local os arch tag url tmp
+  need_cmd curl || return 1
+  need_cmd tar || return 1
+  local os arch tag url tmp dest="$1"
   os=$(uname -s | tr '[:upper:]' '[:lower:]')
   arch=$(uname -m)
   case "$arch" in
@@ -38,7 +35,8 @@ install_from_release() {
 
   tag="${AIRLOCK_VERSION:-}"
   if [[ -z "$tag" ]]; then
-    tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
+    # /releases/latest ignores prereleases — pin AIRLOCK_VERSION for betas
+    tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1) || true
   fi
   if [[ -z "$tag" ]]; then
     return 1
@@ -50,20 +48,22 @@ install_from_release() {
   esac
   url="https://github.com/${REPO}/releases/download/${tag}/${BIN_NAME}_${tag#v}_${os}_${arch}.tar.gz"
   tmp=$(mktemp -d)
-  if ! curl -fsSL "$url" -o "$tmp/airlock.tgz" 2>/dev/null; then
+  if ! curl -fsSL "$url" -o "$tmp/airlock.tgz"; then
+    echo "error: no asset at $url" >&2
     rm -rf "$tmp"
     return 1
   fi
   tar -xzf "$tmp/airlock.tgz" -C "$tmp"
-  install -m 755 "$tmp/$BIN_NAME" "$1/$BIN_NAME"
+  install -m 755 "$tmp/$BIN_NAME" "$dest/$BIN_NAME"
   rm -rf "$tmp"
-  echo "installed $1/$BIN_NAME ($tag)"
+  echo "installed $dest/$BIN_NAME ($tag)"
 }
 
 install_from_source_tree() {
-  need_cmd go
+  need_cmd go || return 1
   local dest="$1"
   local root
+  # curl|sh: $0 is often "sh" / "-" — no local tree
   root=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || return 1
   if [[ ! -f "$root/cmd/airlock/main.go" ]]; then
     return 1
@@ -73,22 +73,36 @@ install_from_source_tree() {
   echo "installed $dest/$BIN_NAME (local source)"
 }
 
+install_with_go() {
+  need_cmd go || return 1
+  local dest="$1"
+  local tag="${AIRLOCK_VERSION:-latest}"
+  case "$tag" in
+    latest | v*) ;;
+    *) tag="v${tag}" ;;
+  esac
+  mkdir -p "$dest"
+  GOBIN="$dest" go install "github.com/${REPO}/cmd/airlock@${tag}"
+  echo "installed $dest/$BIN_NAME (go install @${tag})"
+}
+
 main() {
   local dest
   dest=$(bin_dir)
   mkdir -p "$dest"
-  if install_from_release "$dest" 2>/dev/null; then
+  # try release first; keep stderr so download failures are visible
+  if install_from_release "$dest"; then
     :
-  elif install_from_source_tree "$dest" 2>/dev/null; then
+  elif install_from_source_tree "$dest"; then
     :
   else
     echo "no release binary; trying go install…" >&2
-    install_with_go "$dest" || {
-      echo "error: install failed. Once the repo is public:" >&2
+    if ! install_with_go "$dest"; then
+      echo "error: install failed. Try:" >&2
       echo "  go install github.com/${REPO}/cmd/airlock@latest" >&2
       echo "Or clone and: go build -o airlock ./cmd/airlock" >&2
       exit 1
-    }
+    fi
   fi
   if ! command -v "$BIN_NAME" >/dev/null 2>&1; then
     echo "add to PATH: export PATH=\"$dest:\$PATH\"" >&2
