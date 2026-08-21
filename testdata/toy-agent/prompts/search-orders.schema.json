@@ -1,0 +1,20 @@
+{
+  "name": "search_orders",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "order_id": {
+        "type": "string"
+      },
+      "date_from": {
+        "type": "string"
+      },
+      "date_to": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "order_id"
+    ]
+  }
+}

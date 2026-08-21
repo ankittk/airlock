@@ -1,0 +1,193 @@
+package store
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+	"time"
+
+	"github.com/ankittk/airlock/internal/manifest"
+)
+
+const (
+	DirName      = ".airlock"
+	ManifestFile = "manifest.json"
+	PolicyFile   = "policy.yml"
+	SnapshotsDir = "snapshots"
+	EvalsDir     = "evals"
+	CassettesDir = "cassettes"
+	ResultsDir   = "results"
+	IngestDir    = "ingest"
+	JudgesDir    = "judges"
+	ApprovalsDir = "approvals"
+)
+
+type Paths struct {
+	Root      string
+	Airlock   string
+	Manifest  string
+	Policy    string
+	Snapshots string
+	Evals     string
+	Cassettes string
+	Results   string
+	Ingest    string
+	Judges    string
+	Approvals string
+}
+
+func ForRoot(root string) Paths {
+	air := filepath.Join(root, DirName)
+	return Paths{
+		Root:      root,
+		Airlock:   air,
+		Manifest:  filepath.Join(air, ManifestFile),
+		Policy:    filepath.Join(air, PolicyFile),
+		Snapshots: filepath.Join(air, SnapshotsDir),
+		Evals:     filepath.Join(air, EvalsDir),
+		Cassettes: filepath.Join(air, CassettesDir),
+		Results:   filepath.Join(air, ResultsDir),
+		Ingest:    filepath.Join(air, IngestDir),
+		Judges:    filepath.Join(air, JudgesDir),
+		Approvals: filepath.Join(air, ApprovalsDir),
+	}
+}
+
+func (p Paths) Ensure() error {
+	for _, d := range []string{p.Snapshots, p.Evals, p.Cassettes, p.Results, p.Ingest, p.Judges, p.Approvals} {
+		if err := os.MkdirAll(d, 0o755); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func WriteManifest(p Paths, m *manifest.Manifest) error {
+	if err := p.Ensure(); err != nil {
+		return err
+	}
+	return writeJSON(p.Manifest, m)
+}
+
+func ReadManifest(p Paths) (*manifest.Manifest, error) {
+	data, err := os.ReadFile(p.Manifest)
+	if err != nil {
+		return nil, err
+	}
+	var m manifest.Manifest
+	if err := json.Unmarshal(data, &m); err != nil {
+		return nil, err
+	}
+	return &m, nil
+}
+
+func WritePolicyStub(p Paths) error {
+	if err := p.Ensure(); err != nil {
+		return err
+	}
+	if _, err := os.Stat(p.Policy); err == nil {
+		return nil
+	}
+	stub := `# Airlock policy
+version: 1
+fail_on_ai_change: false
+data_boundary:
+  fail_on_pii: false
+gates:
+  tool_success: { min: 0.99, confidence: 0.95 }
+  json_valid: { min: 0.995, confidence: 0.95 }
+  task_success: { max_regression_pp: 1.0, confidence: 0.95 }
+  adversarial_critical: { max_new_critical: 0, confidence: 0.95 }
+budgets:
+  max_cost_per_pr: 2.00
+  max_samples_per_case: 5
+`
+	return os.WriteFile(p.Policy, []byte(stub), 0o644)
+}
+
+func WriteSnapshot(p Paths, snap *manifest.Snapshot) error {
+	if err := p.Ensure(); err != nil {
+		return err
+	}
+	path := filepath.Join(p.Snapshots, snap.ID+".json")
+	return writeJSON(path, snap)
+}
+
+func ReadSnapshot(p Paths, id string) (*manifest.Snapshot, error) {
+	path := filepath.Join(p.Snapshots, id+".json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var s manifest.Snapshot
+	if err := json.Unmarshal(data, &s); err != nil {
+		return nil, err
+	}
+	return &s, nil
+}
+
+func LatestSnapshotID(p Paths) (string, error) {
+	entries, err := os.ReadDir(p.Snapshots)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("no snapshots yet; run airlock snapshot")
+		}
+		return "", err
+	}
+	type item struct {
+		id  string
+		mod time.Time
+	}
+	var items []item
+	for _, e := range entries {
+		if e.IsDir() || filepath.Ext(e.Name()) != ".json" {
+			continue
+		}
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		id := strings.TrimSuffix(e.Name(), ".json")
+		items = append(items, item{id: id, mod: info.ModTime()})
+	}
+	if len(items) == 0 {
+		return "", fmt.Errorf("no snapshots yet; run airlock snapshot")
+	}
+	slices.SortFunc(items, func(a, b item) int {
+		if c := b.mod.Compare(a.mod); c != 0 {
+			return c
+		}
+		return strings.Compare(b.id, a.id)
+	})
+	return items[0].id, nil
+}
+
+func ReadPolicyFailOnChange(p Paths) bool {
+	data, err := os.ReadFile(p.Policy)
+	if err != nil {
+		return false
+	}
+	for line := range strings.SplitSeq(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if after, ok := strings.CutPrefix(line, "fail_on_ai_change:"); ok {
+			v := strings.TrimSpace(after)
+			return v == "true" || v == "yes" || v == "1"
+		}
+	}
+	return false
+}
+
+func writeJSON(path string, v any) error {
+	data, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return err
+	}
+	data = append(data, '\n')
+	return os.WriteFile(path, data, 0o644)
+}

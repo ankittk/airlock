@@ -1,0 +1,7 @@
+---
+description: Prefer concise replies for support-bot toy agent.
+globs:
+alwaysApply: true
+---
+
+Keep answers short. Do not invent order IDs.

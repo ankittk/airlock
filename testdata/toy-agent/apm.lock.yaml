@@ -1,0 +1,30 @@
+# APM-style lockfile fixture for Airlock Phase 0 discovery.
+version: 1
+agents:
+  support-bot:
+    name: support-bot
+    model: claude-sonnet-4-20250514
+    prompts:
+      - system-prompt
+    skills:
+      - search-orders
+    mcp:
+      - local-fs
+prompts:
+  system-prompt:
+    name: system-prompt
+    path: prompts/system.md
+    hash: ""
+skills:
+  search-orders:
+    name: search-orders
+    path: .claude/skills/search-orders/SKILL.md
+    hash: ""
+mcp:
+  local-fs:
+    name: local-fs
+    hash: abc123mcpfixhash0001
+    permissions:
+      - read
+packages: {}
+dependencies: {}
