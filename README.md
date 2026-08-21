@@ -172,6 +172,24 @@ Airlock gates **AI release risk** on the PR — not general AppSec:
 
 Skill / MCP power expansion → `NEEDS_APPROVAL`. Approvals are advisory until CI uses `--fail-on-approval`.
 
+### If you use LangSmith (or Braintrust / Langfuse / Phoenix)
+
+Keep the observability + eval platform. Airlock is the **release gate beside it**, not a replacement.
+
+| They do | Airlock does |
+|---------|----------------|
+| Trace runs, online evals, datasets, playground, annotation queues | Snapshot / diff / policy / CI ship-or-block on the PR |
+| Iterate prompts and compare experiments in a UI | Fail closed when prompts, skills, MCP, or models change |
+
+**Today (beta):**
+
+1. Keep tracing and datasets in LangSmith (or similar).
+2. In the **application** repo: `airlock init`, point evals at cases you already trust (Promptfoo YAML, or export dataset → Airlock eval JSONL / `airlock import promptfoo`).
+3. Tune `.airlock/policy.yml` thresholds; add the [sample workflow](.github/workflows/airlock.yml) with `--fail-on-eval` / `--fail-on-approval`.
+4. Optional: feed production signal via `airlock ingest otel` → `baseline` / `drift` (OTel JSONL; not a live LangSmith API sync yet).
+
+**Not yet:** native LangSmith connector, prompt playground, hosted annotation queues, managed agent deploy. Those stay on their platform; Airlock borrows the *flexibility* into later phases (suite binding, experiment compare in CI, review queues) without becoming the trace UI. See [roadmap](#status--roadmap).
+
 ---
 
 ## What ships in the stack
@@ -191,7 +209,8 @@ A full **AI release stack**, not a single command:
 | **Data boundary** | Fail release when PII/secrets appear in model I/O (`data_boundary.fail_on_pii`) |
 | **Rollback / routing hints** | Re-pin known-good manifest; emit decisions for gateways |
 | **Model Sentinel** *(Phase 4)* | Fingerprint upstream models; catch silent provider drift |
-| **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy |
+| **Eval flexibility** *(Phase 4)* | Artifact→suite binding, deeper imports, experiment compare in CI, run→eval promotion |
+| **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
 | **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host |
 
 ```mermaid
@@ -253,13 +272,15 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 | Phase | Status | Scope |
 |-------|--------|--------|
 | **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample |
-| **4** | Next | Sentinel + one stack scanner + deeper eval/prompt sources |
-| **5** | Upcoming | Org control plane: shared history, approvals, audit, team policy |
-| **6** | Upcoming | Platform: K8s admission, shadow releases, SSO, EU / self-host |
+| **4** | Next | Sentinel + one stack scanner; deeper eval/prompt sources; **artifact→suite binding**; experiment compare in CI; OTel/trace → eval-case promotion; richer judges; optional LangSmith/Braintrust **import** (not hosted tracing) |
+| **5** | Upcoming | Org control plane: shared history, approvals, audit, team policy; **annotation / review queues**; org-level evaluator library; connectors to existing eval platforms |
+| **6** | Upcoming | Platform: K8s admission, shadow releases, SSO, EU / self-host — **not** a managed agent runtime / Fleet clone |
 
 ```text
-OSS beta  →  Phase 4 Sentinel/stack  →  Phase 5 control plane  →  Phase 6 platform
+OSS beta  →  Phase 4 Sentinel/stack + eval flexibility  →  Phase 5 control plane  →  Phase 6 platform
 ```
+
+**Non-goals:** replace LangSmith (or similar) as the trace/playground/deploy product. Airlock stays the CI release decision.
 
 Design-partner outreach continues after the beta cut (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).
 

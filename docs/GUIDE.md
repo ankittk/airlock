@@ -36,12 +36,13 @@ Airlock sits **beside** frameworks, gateways, and observability — it does not 
 | You already use… | Airlock’s role |
 |------------------|----------------|
 | LangGraph / LangChain / Vercel AI SDK / custom agent | Release gate in that **git repo** |
+| **LangSmith** / Braintrust (traces, datasets, online evals, playground) | Keep them for observe/iterate; Airlock gates **ship/block/approve** on the PR — see [README](../README.md#if-you-use-langsmith-or-braintrust--langfuse--phoenix) |
 | Langfuse / Datadog / Phoenix (OTel) | Consume traces via `ingest otel` → baseline / drift |
 | LiteLLM / Bifrost / Portkey | Decider: emits routing hints; gateway is the actuator |
 | Microsoft APM | Import `apm.lock.yaml` — do not re-implement package resolution |
 | Promptfoo | `import promptfoo` → Airlock eval JSONL |
 
-There is no first-party `integrate litellm|langgraph|langfuse` plugin yet. Integration is protocol-level (files, OTel JSONL, routing JSON).
+There is no first-party `integrate litellm|langgraph|langsmith` plugin yet. Integration is protocol-level (files, OTel JSONL, routing JSON). Native connectors = Phase 4–5.
 
 ---
 
@@ -225,10 +226,10 @@ Anything discoverable but not hashable should show up as an **unpinned risk** in
 
 | Deferred to | Not yet |
 |-------------|---------|
-| **Phase 4** | `airlock sentinel`, SDK AST / LangGraph scanners, deep Promptfoo globs, live MCP schema fetch |
-| **Phase 5** | Hosted org control plane, shared multi-repo history, team policy sync |
+| **Phase 4** | `airlock sentinel`, SDK AST / LangGraph scanners, deep Promptfoo globs, live MCP schema fetch, artifact→suite binding, experiment compare in CI, LangSmith-style import flexibility |
+| **Phase 5** | Hosted org control plane, shared multi-repo history, team policy sync, review queues, org evaluators |
 | **Phase 6** | K8s admission, shadow releases, SSO, EU residency / self-host |
-| — | Rebuild Promptfoo; require APM; plugins for every gateway |
+| — | Rebuild Promptfoo / LangSmith; require APM; managed agent runtime; plugins for every gateway |
 
 **Shipped in the OSS beta:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Security-in-CI docs — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
 
