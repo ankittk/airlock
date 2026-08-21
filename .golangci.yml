@@ -1,0 +1,85 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+    - gofumpt
+
+linters:
+  default: standard
+  enable:
+    - asasalint
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - durationcheck
+    - errorlint
+    - forcetypeassert
+    - misspell
+    - nilerr
+    - noctx
+    - prealloc
+    - reassign
+    - revive
+    - thelper
+    - unconvert
+    - usestdlibvars
+    - usetesting
+    - wastedassign
+  settings:
+    revive:
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+          disabled: true
+        - name: if-return
+        - name: var-naming
+        - name: package-comments
+          disabled: true
+        - name: range
+        - name: indent-error-flow
+        - name: errorf
+        - name: empty-block
+        - name: superfluous-else
+        - name: unused-parameter
+          disabled: true
+        - name: unreachable-code
+        - name: redefines-builtin-id
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - (*bytes.Buffer).Write
+        - (*bytes.Buffer).WriteString
+        - (io.Closer).Close
+        - fmt.Fprintf
+        - fmt.Fprint
+        - fmt.Fprintln
+    govet:
+      disable:
+        - fieldalignment
+  exclusions:
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - noctx
+          - bodyclose
+          - nilerr
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0

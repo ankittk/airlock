@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+# Install airlock into the first writable of: $BINDIR, $GOBIN, $GOPATH/bin, $HOME/bin, /usr/local/bin
+set -euo pipefail
+
+REPO="ankittk/airlock"
+BIN_NAME="airlock"
+
+bin_dir() {
+  if [[ -n "${BINDIR:-}" ]]; then echo "$BINDIR"; return; fi
+  if [[ -n "${GOBIN:-}" ]]; then echo "$GOBIN"; return; fi
+  if [[ -n "${GOPATH:-}" ]]; then echo "${GOPATH%/}/bin"; return; fi
+  if [[ -d "$HOME/bin" || -w "$HOME" ]]; then echo "$HOME/bin"; return; fi
+  echo "/usr/local/bin"
+}
+
+need_cmd() {
+  command -v "$1" >/dev/null 2>&1 || {
+    echo "error: need '$1' on PATH" >&2
+    exit 1
+  }
+}
+
+install_from_release() {
+  need_cmd curl
+  need_cmd tar
+  local os arch tag url tmp
+  os=$(uname -s | tr '[:upper:]' '[:lower:]')
+  arch=$(uname -m)
+  case "$arch" in
+    x86_64 | amd64) arch=amd64 ;;
+    aarch64 | arm64) arch=arm64 ;;
+    *) echo "error: unsupported arch: $arch" >&2; return 1 ;;
+  esac
+  case "$os" in
+    linux | darwin) ;;
+    *) echo "error: unsupported OS: $os" >&2; return 1 ;;
+  esac
+
+  tag="${AIRLOCK_VERSION:-}"
+  if [[ -z "$tag" ]]; then
+    tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -1)
+  fi
+  if [[ -z "$tag" ]]; then
+    return 1
+  fi
+  # allow AIRLOCK_VERSION=0.1.0-beta.1 or v0.1.0-beta.1
+  case "$tag" in
+    v*) ;;
+    *) tag="v${tag}" ;;
+  esac
+  url="https://github.com/${REPO}/releases/download/${tag}/${BIN_NAME}_${tag#v}_${os}_${arch}.tar.gz"
+  tmp=$(mktemp -d)
+  if ! curl -fsSL "$url" -o "$tmp/airlock.tgz" 2>/dev/null; then
+    rm -rf "$tmp"
+    return 1
+  fi
+  tar -xzf "$tmp/airlock.tgz" -C "$tmp"
+  install -m 755 "$tmp/$BIN_NAME" "$1/$BIN_NAME"
+  rm -rf "$tmp"
+  echo "installed $1/$BIN_NAME ($tag)"
+}
+
+install_from_source_tree() {
+  need_cmd go
+  local dest="$1"
+  local root
+  root=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || return 1
+  if [[ ! -f "$root/cmd/airlock/main.go" ]]; then
+    return 1
+  fi
+  mkdir -p "$dest"
+  (cd "$root" && go build -o "$dest/$BIN_NAME" ./cmd/airlock)
+  echo "installed $dest/$BIN_NAME (local source)"
+}
+
+main() {
+  local dest
+  dest=$(bin_dir)
+  mkdir -p "$dest"
+  if install_from_release "$dest" 2>/dev/null; then
+    :
+  elif install_from_source_tree "$dest" 2>/dev/null; then
+    :
+  else
+    echo "no release binary; trying go install…" >&2
+    install_with_go "$dest" || {
+      echo "error: install failed. Once the repo is public:" >&2
+      echo "  go install github.com/${REPO}/cmd/airlock@latest" >&2
+      echo "Or clone and: go build -o airlock ./cmd/airlock" >&2
+      exit 1
+    }
+  fi
+  if ! command -v "$BIN_NAME" >/dev/null 2>&1; then
+    echo "add to PATH: export PATH=\"$dest:\$PATH\"" >&2
+  fi
+  "$dest/$BIN_NAME" version || true
+}
+
+main "$@"

@@ -1,0 +1,27 @@
+name: Feature request
+description: Propose a change that fits Airlock's scope
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What pain does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Concrete CLI / API sketch if possible
+    validations:
+      required: true
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope check
+      options:
+        - label: This is local-first CLI behavior (not a cloud control plane)
+        - label: This does not re-implement Microsoft APM install/resolve
+        - label: I am willing to help with a PR or fixtures

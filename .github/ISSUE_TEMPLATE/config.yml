@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/ankittk/airlock/security/advisories/new
+    about: Report privately — do not file a public issue.

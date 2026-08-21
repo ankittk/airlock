@@ -1,0 +1,43 @@
+# Local Airlock state (app repos + testdata)
+.airlock/
+
+# Built CLI (repo-root binary from `go build -o airlock ./cmd/airlock`)
+/airlock
+/airlock-*
+*.exe
+
+# Go
+*.test
+*.out
+coverage.out
+coverage.*
+*.coverprofile
+profile.cov
+vendor/
+go.work
+go.work.sum
+
+# Release / packaging
+dist/
+bin/
+*.tar.gz
+*.zip
+sha256sums.txt
+checksums.txt
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors / IDEs (keep testdata/.cursor/rules committed — do not ignore .cursor/)
+.idea/
+.vscode/
+*.swp
+*.swo
+.fleet/
+*~
