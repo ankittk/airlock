@@ -228,9 +228,3 @@ Same pattern as ledger-style approval DAGs: deterministic code owns amount and a
 ## Design partners
 
 Outreach and feedback are a **process**, not a numbered phase. Bugs and proposals: [GitHub Issues](https://github.com/ankittk/airlock/issues). How we take help: [SUPPORT](../SUPPORT.md), [CONTRIBUTING](../CONTRIBUTING.md).
-
-```text
-OSS beta  →  Phase 4 Sentinel / stack / eval flexibility / agent supply-chain surface
-          →  Phase 5 control plane
-          →  Phase 6 platform
-```
