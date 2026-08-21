@@ -54,38 +54,66 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 
 ## Install
 
-**Platforms:** Linux / macOS · `amd64` / `arm64`. Windows not supported yet.
-
-Pin a beta tag (GitHub “latest” **skips** pre-releases):
+**Platforms:** Linux / macOS · `amd64` / `arm64` (Windows not yet).  
+Pin the tag — GitHub “latest” skips pre-releases.
 
 ```bash
 AIRLOCK_VERSION=v0.1.0-beta.1 curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
+# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.1
 ```
 
-```bash
-go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.1   # Go 1.25+
-```
+## Quick start — break a prompt, watch Airlock catch it
 
-## Quick start
-
-From a **clone of this repo** (toy agent + cassettes included). Replay needs no API keys:
+Clone this repo. Toy agent at `testdata/toy-agent` ships prompts, a skill, MCP, and replay cassettes — **no API keys**.
 
 ```bash
 cd testdata/toy-agent
 airlock init && airlock snapshot
-# edit a file under prompts/ or a skill…
+```
+
+```console
+$ airlock init && airlock snapshot
+Wrote .airlock/manifest.json
+  agents=1 models=1 prompts=2 tools=0 skills=1 mcp=2 evals=5
+snapshot abc123…  artifacts=12  manifest=def456…
+```
+
+Nudge the system prompt (or edit a skill / widen MCP permissions):
+
+```bash
+echo "You are a DIFFERENT support agent." >> prompts/system.md
 airlock snapshot && airlock diff
+```
+
+```console
+$ airlock snapshot && airlock diff
+snapshot ghi789…  artifacts=12  manifest=jkl012…
+
+Changed AI artifacts:
+  ~ prompt:system-prompt (a1b2c3d4 → e5f6a7b8)
+
+Blast radius — agents: support-bot
+Blast radius — evals:  default
+```
+
+Run cheap replay evals and emit the PR body:
+
+```bash
 airlock test --mode replay
 airlock ci --comment
 ```
 
-```text
-$ airlock diff
-Changed AI artifacts:
-  ~ prompt:system-prompt (a1b2c3d4 → e5f6a7b8)
-Blast radius — agents: support-bot
+```console
+$ airlock test --mode replay
+Verdict: PASS
+metric             rate             95% CI  gate
+task_success      100.0%  [ 47.8%, 100.0%]  PASS
+samples=9 cost=$0.0000  (cassette replay)
 
 $ airlock ci --comment
+```
+
+```markdown
 ### Airlock
 This PR changes AI artifacts:
 - `changed` **prompt:system-prompt**
@@ -93,14 +121,38 @@ This PR changes AI artifacts:
 Blast radius: agents **support-bot**
 
 ### Airlock eval
+
 **Verdict: PASS**
+
 | metric | rate | 95% CI | gate |
+|---|---:|---|---|
 | `task_success` | 100.0% | [47.8%, 100.0%] | **PASS** |
 ```
 
-`--mode live` needs provider API keys (respects `budgets.max_cost_per_pr` in `.airlock/policy.yml`).
+Flip the story — expand MCP power instead of a prompt:
 
-Full walkthrough: **[docs/GUIDE.md](docs/GUIDE.md)**.
+```bash
+# e.g. add "write" under local-fs permissions in apm.lock.yaml
+airlock snapshot && airlock diff
+airlock ci --comment --fail-on-approval
+```
+
+```console
+$ airlock diff
+Changed AI artifacts:
+  ~ mcp:local-fs (… → …)
+NEEDS_APPROVAL: MCP new permission write on local-fs
+
+$ airlock ci --comment --fail-on-approval
+### Airlock
+…
+**NEEDS_APPROVAL:** MCP new permission write on local-fs
+exit 1   # merge blocked until: airlock approve --base … --head …
+```
+
+That is the company wedge: **AI change control on the PR**, not “hope the prompt looks fine.”
+
+`--mode live` hits real providers (API keys + `budgets.max_cost_per_pr`). Full walkthrough: **[docs/GUIDE.md](docs/GUIDE.md)**.
 
 ## Use it on your repo
 
