@@ -81,7 +81,7 @@ airlock ci --comment
 Pin a pre-release tag from [Releases](https://github.com/ankittk/airlock/releases) (or copy the command from [README — Install](../README.md#install)). GitHub “latest” skips pre-releases.
 
 ```bash
-AIRLOCK_VERSION=<tag> curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
+curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=<tag> bash
 # or: go install github.com/ankittk/airlock/cmd/airlock@<tag>   # Go 1.25+
 ```
 
