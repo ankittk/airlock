@@ -2,7 +2,7 @@
 
 Airlock is **CI/CD for AI behavior**: a local-first Go CLI that treats models, prompts, tools, skills, MCP servers, judges, and evals as a releasable unit — then diffs, evaluates, and gates the ship.
 
-**First public beta:** [`v0.1.0-beta.1`](../CHANGELOG.md). Expect discovery gaps and CLI churn before 1.0.
+**First public beta** — see [CHANGELOG](../CHANGELOG.md) for the current tag. Expect discovery gaps and CLI churn before 1.0.
 
 Normal CI: “Did code build / tests pass?”  
 Airlock: “Did this **AI change** stay within policy, with statistical confidence?”
@@ -78,12 +78,11 @@ airlock ci --comment
 
 ## Install
 
-```bash
-# pin a beta tag (GitHub “latest” skips pre-releases)
-AIRLOCK_VERSION=v0.1.0-beta.1 curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
+Pin a pre-release tag from [Releases](https://github.com/ankittk/airlock/releases) (or copy the command from [README — Install](../README.md#install)). GitHub “latest” skips pre-releases.
 
-# or
-go install github.com/ankittk/airlock/cmd/airlock@latest   # Go 1.25+
+```bash
+AIRLOCK_VERSION=<tag> curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
+# or: go install github.com/ankittk/airlock/cmd/airlock@<tag>   # Go 1.25+
 ```
 
 Maintainers cutting releases: see [RELEASING.md](RELEASING.md).
@@ -231,9 +230,9 @@ Anything discoverable but not hashable should show up as an **unpinned risk** in
 | **Phase 6** | K8s admission, shadow releases, SSO, EU residency / self-host |
 | — | Rebuild Promptfoo; require APM; plugins for every gateway |
 
-**Shipped in `v0.1.0-beta.1`:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Security-in-CI docs — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
+**Shipped in the OSS beta:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Security-in-CI docs — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
 
-Full release notes: [CHANGELOG.md](../CHANGELOG.md).
+Release notes: [CHANGELOG.md](../CHANGELOG.md).
 
 ---
 

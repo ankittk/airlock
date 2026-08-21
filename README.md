@@ -11,9 +11,9 @@ The open-source distribution is a local-first Go toolchain (binary + CI Action +
 [![CI](https://github.com/ankittk/airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/ankittk/airlock/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/go-1.25+-00ADD8?logo=go&logoColor=white)](go.mod)
-[![Release](https://img.shields.io/badge/release-v0.1.0--beta.1-orange.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/github/v/release/ankittk/airlock?include_prereleases)](https://github.com/ankittk/airlock/releases)
 
-> First public beta · no telemetry · [Apache-2.0](LICENSE) · state under `.airlock/`  
+> First public beta · no telemetry · [Apache-2.0](LICENSE) · state under `.airlock/` · versions in [CHANGELOG](CHANGELOG.md)  
 > **APM** tells you what the agent depends on · **eval platforms** tell you how it scored · **Airlock** tells you whether that change is safe to ship.  
 > Not a Promptfoo/Braintrust replacement — the release gate beside them.
 
@@ -55,11 +55,11 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 ## Install
 
 **Platforms:** Linux / macOS · `amd64` / `arm64` (Windows not yet).  
-Pin the tag — GitHub “latest” skips pre-releases.
+Pin a **pre-release** tag from [Releases](https://github.com/ankittk/airlock/releases) (GitHub “latest” skips them). Current tag: see [CHANGELOG](CHANGELOG.md).
 
 ```bash
-AIRLOCK_VERSION=v0.1.0-beta.1 curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
-# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.1
+AIRLOCK_VERSION=v0.1.0-beta.2 curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
+# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.2
 ```
 
 ## Quick start — break a prompt, watch Airlock catch it
@@ -252,13 +252,13 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 
 | Phase | Status | Scope |
 |-------|--------|--------|
-| **0–3 + Now** | **`v0.1.0-beta.1`** | OSS toolchain + harness skills/rules + fail-closed CI sample |
+| **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample |
 | **4** | Next | Sentinel + one stack scanner + deeper eval/prompt sources |
 | **5** | Upcoming | Org control plane: shared history, approvals, audit, team policy |
 | **6** | Upcoming | Platform: K8s admission, shadow releases, SSO, EU / self-host |
 
 ```text
-v0.1.0-beta.1  →  Phase 4 Sentinel/stack  →  Phase 5 control plane  →  Phase 6 platform
+OSS beta  →  Phase 4 Sentinel/stack  →  Phase 5 control plane  →  Phase 6 platform
 ```
 
 Design-partner outreach continues after the beta cut (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).

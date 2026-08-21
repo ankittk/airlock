@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag to release (e.g. v0.1.0-beta.1). Leave empty to use the pushed tag."
+        description: "Tag to release (e.g. v0.2.0). Leave empty to use the pushed tag."
         required: false
         default: ""
 
@@ -47,7 +47,7 @@ jobs:
           fi
           case "$TAG" in
             v*) ;;
-            *) echo "tag must look like v0.1.0 or v0.1.0-beta.1, got: $TAG" >&2; exit 1 ;;
+            *) echo "tag must look like v1.2.3 or v1.2.3-beta.1, got: $TAG" >&2; exit 1 ;;
           esac
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "ver=${TAG#v}" >> "$GITHUB_OUTPUT"

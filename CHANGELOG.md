@@ -11,6 +11,18 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ### Changed
 ### Fixed
 
+## [0.1.0-beta.2] – 2026-08-21
+
+Re-cut of the first public beta with working GitHub Release assets (beta.1 publish raced and left an empty release).
+
+### Changed
+- README quick start: console walkthrough (prompt change → diff → CI comment; MCP → `NEEDS_APPROVAL`)
+
+### Fixed
+- Publish a complete multi-arch release for `install.sh` (linux/darwin × amd64/arm64)
+
+Install from this tag (not beta.1). One pin lives in [README — Install](README.md#install).
+
 ## [0.1.0-beta.1] – 2026-08-21
 
 **First public beta** of the local-first Airlock CLI: AI release control for git repos (manifest → snapshot → diff → statistical eval → CI gate).
@@ -60,14 +72,6 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 
-### Install
-
-```bash
-AIRLOCK_VERSION=v0.1.0-beta.1 curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | sh
-# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.1
-```
-
-Pin the tag: GitHub “latest” skips pre-releases.
-
-[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.1...HEAD
+[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...HEAD
+[0.1.0-beta.2]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.2
 [0.1.0-beta.1]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.1

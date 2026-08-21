@@ -33,6 +33,6 @@ body:
     id: version
     attributes:
       label: airlock version / go version
-      placeholder: airlock 0.1.0-beta.1 / go1.25.9
+      placeholder: output of `airlock version` (and Go version if building from source)
     validations:
       required: true
