@@ -6,6 +6,7 @@ Airlock is a volunteer-maintained **public beta**. Expect rough edges; APIs and 
 |------|--------|
 | Bug / feature | [GitHub Issues](https://github.com/ankittk/airlock/issues) — include `airlock version`, OS, and a minimal repro |
 | How-to / design | [Discussions](https://github.com/ankittk/airlock/discussions) or an issue labeled `question` |
+| Roadmap / phases | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | Security | [SECURITY.md](SECURITY.md) only |
 | Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Release notes | [CHANGELOG.md](CHANGELOG.md) |

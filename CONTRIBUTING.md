@@ -52,7 +52,7 @@ Maintainers: see [docs/RELEASING.md](docs/RELEASING.md). Tag `v*` on `main` → 
 | Discovery: skills, Cursor rules, APM / Promptfoo / OTel | Competing with APM install-time features |
 | CI gate / approval hardening | Every framework plugin at once |
 
-Airlock **imports** APM lockfiles; it does not re-implement APM resolution. Roadmap: [README — Status & roadmap](README.md#status--roadmap).
+Airlock **imports** APM lockfiles; it does not re-implement APM resolution. Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## License
 

@@ -48,7 +48,7 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 | Teams that change prompts or models often and want PR gates | Expecting a hosted org dashboard today (Phase 5) |
 | Repos with eval cases / Promptfoo, or OTel GenAI spans | Need deep LangGraph / Vercel AI / SDK AST discovery *now* (Phase 4) |
 
-**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), `airlock sentinel` (Phase 4), first-party plugins for every gateway/framework. See [roadmap](#status--roadmap).
+**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), `airlock sentinel` (Phase 4), first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -167,10 +167,12 @@ Airlock gates **AI release risk** on the PR — not general AppSec:
 | Airlock blocks (with flags) | Still use elsewhere |
 |-----------------------------|---------------------|
 | MCP / write-tool / **skill** expansion (`--fail-on-approval`) | CodeQL / SAST |
-| Adversarial / injection cases when MCP or skills change | Dependabot / SCA |
+| Adversarial / injection cases when MCP or skills change | Dependabot / SCA / Socket / cargo-vet |
 | Eval regressions (`--fail-on-eval`); PII in model I/O | Repo secret scanners |
 
 Skill / MCP power expansion → `NEEDS_APPROVAL`. Approvals are advisory until CI uses `--fail-on-approval`.
+
+**Supply chain (npm, crates.io, PyPI, …):** classic malware-in-the-lockfile is still Dependabot / SCA / provenance. Agents make it worse by proposing or merging deps at machine speed. Airlock’s angle is the **AI release surface**: when a prompt/skill/MCP/agent change also expands APM or language lockfiles, treat that as blast radius and (later) fail closed or require approval before merge/publish — not replace package-manager security scanners. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
 
 ### If you use LangSmith (or Braintrust / Langfuse / Phoenix)
 
@@ -188,7 +190,7 @@ Keep the observability + eval platform. Airlock is the **release gate beside it*
 3. Tune `.airlock/policy.yml` thresholds; add the [sample workflow](.github/workflows/airlock.yml) with `--fail-on-eval` / `--fail-on-approval`.
 4. Optional: feed production signal via `airlock ingest otel` → `baseline` / `drift` (OTel JSONL; not a live LangSmith API sync yet).
 
-**Not yet:** native LangSmith connector, prompt playground, hosted annotation queues, managed agent deploy. Those stay on their platform; Airlock borrows the *flexibility* into later phases (suite binding, experiment compare in CI, review queues) without becoming the trace UI. See [roadmap](#status--roadmap).
+**Not yet:** native LangSmith connector, prompt playground, hosted annotation queues, managed agent deploy. Those stay on their platform; Airlock borrows the *flexibility* into later phases without becoming the trace UI. Details: [docs/ROADMAP.md](docs/ROADMAP.md#langsmith--braintrust--langfuse--phoenix).
 
 ---
 
@@ -210,8 +212,9 @@ A full **AI release stack**, not a single command:
 | **Rollback / routing hints** | Re-pin known-good manifest; emit decisions for gateways |
 | **Model Sentinel** *(Phase 4)* | Fingerprint upstream models; catch silent provider drift |
 | **Eval flexibility** *(Phase 4)* | Artifact→suite binding, deeper imports, experiment compare in CI, run→eval promotion |
+| **Agent-driven supply chain** *(Phase 4)* | Lockfile / APM dep expansion in blast radius + `NEEDS_APPROVAL` when AI change widens package surface |
 | **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
-| **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host |
+| **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host; optional **publish gate** hooks (CI → registry) beside SCA/attestations |
 
 ```mermaid
 flowchart TB
@@ -272,15 +275,15 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 | Phase | Status | Scope |
 |-------|--------|--------|
 | **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample |
-| **4** | Next | Sentinel + one stack scanner; deeper eval/prompt sources; **artifact→suite binding**; experiment compare in CI; OTel/trace → eval-case promotion; richer judges; optional LangSmith/Braintrust **import** (not hosted tracing) |
-| **5** | Upcoming | Org control plane: shared history, approvals, audit, team policy; **annotation / review queues**; org-level evaluator library; connectors to existing eval platforms |
-| **6** | Upcoming | Platform: K8s admission, shadow releases, SSO, EU / self-host — **not** a managed agent runtime / Fleet clone |
+| **4** | Next | Sentinel, stack scanner, eval flexibility, agent-driven supply chain |
+| **5** | Upcoming | Org control plane, review queues, org evaluators |
+| **6** | Upcoming | Platform (K8s, SSO, EU) + optional registry publish gate |
 
 ```text
-OSS beta  →  Phase 4 Sentinel/stack + eval flexibility  →  Phase 5 control plane  →  Phase 6 platform
+OSS beta  →  Phase 4  →  Phase 5  →  Phase 6
 ```
 
-**Non-goals:** replace LangSmith (or similar) as the trace/playground/deploy product. Airlock stays the CI release decision.
+**Details:** [docs/ROADMAP.md](docs/ROADMAP.md) — LangSmith / CUSTODY / SCA integration maps, phase “what / why / integrate”, and non-goals.
 
 Design-partner outreach continues after the beta cut (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).
 
@@ -293,7 +296,7 @@ golangci-lint run ./...
 
 This repository’s CI is [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (Go test/lint). Releases: [docs/RELEASING.md](docs/RELEASING.md).
 
-[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Changelog](CHANGELOG.md) · [Guide](docs/GUIDE.md)
+[Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Support](SUPPORT.md) · [Changelog](CHANGELOG.md) · [Guide](docs/GUIDE.md) · [Roadmap](docs/ROADMAP.md)
 
 ## License
 

@@ -36,7 +36,7 @@ Airlock sits **beside** frameworks, gateways, and observability — it does not 
 | You already use… | Airlock’s role |
 |------------------|----------------|
 | LangGraph / LangChain / Vercel AI SDK / custom agent | Release gate in that **git repo** |
-| **LangSmith** / Braintrust (traces, datasets, online evals, playground) | Keep them for observe/iterate; Airlock gates **ship/block/approve** on the PR — see [README](../README.md#if-you-use-langsmith-or-braintrust--langfuse--phoenix) |
+| **LangSmith** / Braintrust (traces, datasets, online evals, playground) | Keep them for observe/iterate; Airlock gates **ship/block/approve** on the PR — [ROADMAP — LangSmith](ROADMAP.md#langsmith--braintrust--langfuse--phoenix) |
 | Langfuse / Datadog / Phoenix (OTel) | Consume traces via `ingest otel` → baseline / drift |
 | LiteLLM / Bifrost / Portkey | Decider: emits routing hints; gateway is the actuator |
 | Microsoft APM | Import `apm.lock.yaml` — do not re-implement package resolution |
@@ -224,12 +224,7 @@ Anything discoverable but not hashable should show up as an **unpinned risk** in
 
 ## What not to expect yet
 
-| Deferred to | Not yet |
-|-------------|---------|
-| **Phase 4** | `airlock sentinel`, SDK AST / LangGraph scanners, deep Promptfoo globs, live MCP schema fetch, artifact→suite binding, experiment compare in CI, LangSmith-style import flexibility |
-| **Phase 5** | Hosted org control plane, shared multi-repo history, team policy sync, review queues, org evaluators |
-| **Phase 6** | K8s admission, shadow releases, SSO, EU residency / self-host |
-| — | Rebuild Promptfoo / LangSmith; require APM; managed agent runtime; plugins for every gateway |
+Deferred work (Sentinel, eval flexibility, CUSTODY/LangSmith/SCA integration maps, publish gate, non-goals) lives in **[ROADMAP.md](ROADMAP.md)**. Do not expect Airlock to replace Promptfoo, LangSmith, Dependabot/Socket, APM, or a managed agent runtime.
 
 **Shipped in the OSS beta:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Security-in-CI docs — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
 
@@ -239,6 +234,7 @@ Release notes: [CHANGELOG.md](../CHANGELOG.md).
 
 ## Next reading
 
-- [README](../README.md) — product overview + roadmap  
+- [README](../README.md) — product overview  
+- [ROADMAP.md](ROADMAP.md) — phases, integrations, non-goals  
 - [RELEASING.md](RELEASING.md) — cutting GitHub releases  
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — developing Airlock itself  
