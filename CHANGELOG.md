@@ -8,9 +8,16 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ## [Unreleased]
 
 ### Added
+### Changed
+### Fixed
+
+## [0.1.0-beta.3] – 2026-08-24
+
+Phase 4 roadmap item shipped early, plus a merge-gate bypass fix found while building its demo.
+
+### Added
 - Agent-driven supply chain: APM package dependencies tracked as `manifest.Dependency`; a new dependency landing alongside an AI-artifact change (prompt/skill/MCP/agent) raises `NEEDS_APPROVAL` in `airlock diff` / `airlock ci --fail-on-approval`. Dependency-only PRs are left to SCA.
 
-### Changed
 ### Fixed
 - `airlock ci --comment` no longer bypasses `--fail-on-approval` / `--fail-on-eval` / `fail_on_ai_change` — it now only changes the stdout format and still writes `ci-comment.md`; the fail-closed gate always runs.
 
@@ -75,6 +82,7 @@ Install from this tag (not beta.1). One pin lives in [README — Install](README
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 
-[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...HEAD
+[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.3...HEAD
+[0.1.0-beta.3]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...v0.1.0-beta.3
 [0.1.0-beta.2]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.2
 [0.1.0-beta.1]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.1
