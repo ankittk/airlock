@@ -150,6 +150,30 @@ $ airlock ci --comment --fail-on-approval
 exit 1   # merge blocked until: airlock approve --base … --head …
 ```
 
+Flip it again — a prompt edit that quietly rides in with a new dependency (agent-driven supply chain):
+
+```bash
+# edit prompts/system.md AND add a package under `packages:` in apm.lock.yaml
+airlock diff --base <baseline-snapshot-id>
+airlock ci --base <baseline-snapshot-id> --fail-on-approval
+```
+
+```console
+$ airlock diff --base aaee8c11172c86b1
+Changed AI artifacts:
+  + dependency:left-pad
+  ~ prompt:system-prompt (a68e98e0 → 31125b19)
+Blast radius — agents: support-bot
+NEEDS_APPROVAL: new dependency: left-pad
+
+$ airlock ci --base aaee8c11172c86b1 --fail-on-approval
+…
+airlock ci: NEEDS_APPROVAL without ledger entry (run: airlock approve --base … --head …)
+exit 1   # merge blocked until: airlock approve --base … --head …
+```
+
+A dependency added **on its own** (no prompt/skill/MCP/agent change alongside it) does not trigger this — that PR is Dependabot / SCA's job, not Airlock's. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
+
 That is the company wedge: **AI change control on the PR**, not “hope the prompt looks fine.”
 
 `--mode live` hits real providers (API keys + `budgets.max_cost_per_pr`). Full walkthrough: **[docs/GUIDE.md](docs/GUIDE.md)**.
@@ -172,7 +196,7 @@ Airlock gates **AI release risk** on the PR — not general AppSec:
 
 Skill / MCP power expansion → `NEEDS_APPROVAL`. Approvals are advisory until CI uses `--fail-on-approval`.
 
-**Supply chain (npm, crates.io, PyPI, …):** classic malware-in-the-lockfile is still Dependabot / SCA / provenance. Agents make it worse by proposing or merging deps at machine speed. Airlock’s angle is the **AI release surface**: when a prompt/skill/MCP/agent change also expands APM or language lockfiles, treat that as blast radius and (later) fail closed or require approval before merge/publish — not replace package-manager security scanners. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
+**Supply chain (npm, crates.io, PyPI, …):** classic malware-in-the-lockfile is still Dependabot / SCA / provenance. Agents make it worse by proposing or merging deps at machine speed. Airlock’s angle is the **AI release surface**: when a prompt/skill/MCP/agent change also expands an APM-tracked package dependency, that lands in blast radius as `NEEDS_APPROVAL` (`--fail-on-approval` blocks merge) — a dep-only PR with no AI-artifact change is left to SCA. Not replacing package-manager security scanners. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
 
 ### If you use LangSmith (or Braintrust / Langfuse / Phoenix)
 
@@ -210,9 +234,9 @@ A full **AI release stack**, not a single command:
 | **Drift detection** | Live vs approved baseline even with no deploy |
 | **Data boundary** | Fail release when PII/secrets appear in model I/O (`data_boundary.fail_on_pii`) |
 | **Rollback / routing hints** | Re-pin known-good manifest; emit decisions for gateways |
+| **Agent-driven supply chain** | APM dependency tracked as blast radius; `NEEDS_APPROVAL` when AI-artifact change co-occurs with a new dependency |
 | **Model Sentinel** *(Phase 4)* | Fingerprint upstream models; catch silent provider drift |
 | **Eval flexibility** *(Phase 4)* | Artifact→suite binding, deeper imports, experiment compare in CI, run→eval promotion |
-| **Agent-driven supply chain** *(Phase 4)* | Lockfile / APM dep expansion in blast radius + `NEEDS_APPROVAL` when AI change widens package surface |
 | **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
 | **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host; optional **publish gate** hooks (CI → registry) beside SCA/attestations |
 
@@ -274,8 +298,8 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 
 | Phase | Status | Scope |
 |-------|--------|--------|
-| **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample |
-| **4** | Next | Sentinel, stack scanner, eval flexibility, agent-driven supply chain |
+| **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample + agent-driven supply chain |
+| **4** | Next | Sentinel, stack scanner, eval flexibility |
 | **5** | Upcoming | Org control plane, review queues, org evaluators |
 | **6** | Upcoming | Platform (K8s, SSO, EU) + optional registry publish gate |
 

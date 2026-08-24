@@ -6,20 +6,21 @@ const Version = 1
 
 // Manifest is the normalized AI dependency graph for a repo.
 type Manifest struct {
-	Version     int            `json:"version"`
-	GeneratedAt time.Time      `json:"generated_at"`
-	Root        string         `json:"root"`
-	Agents      []Agent        `json:"agents,omitempty"`
-	Models      []Model        `json:"models,omitempty"`
-	Prompts     []Prompt       `json:"prompts,omitempty"`
-	Tools       []Tool         `json:"tools,omitempty"`
-	Skills      []Skill        `json:"skills,omitempty"`
-	MCPServers  []MCPServer    `json:"mcp_servers,omitempty"`
-	Evals       []EvalHook     `json:"evals,omitempty"`
-	Envs        []Env          `json:"envs,omitempty"`
-	Sources     []Source       `json:"sources,omitempty"`
-	Graph       []Edge         `json:"graph,omitempty"`
-	Unpinned    []UnpinnedRisk `json:"unpinned_risks,omitempty"`
+	Version      int            `json:"version"`
+	GeneratedAt  time.Time      `json:"generated_at"`
+	Root         string         `json:"root"`
+	Agents       []Agent        `json:"agents,omitempty"`
+	Models       []Model        `json:"models,omitempty"`
+	Prompts      []Prompt       `json:"prompts,omitempty"`
+	Tools        []Tool         `json:"tools,omitempty"`
+	Skills       []Skill        `json:"skills,omitempty"`
+	MCPServers   []MCPServer    `json:"mcp_servers,omitempty"`
+	Evals        []EvalHook     `json:"evals,omitempty"`
+	Envs         []Env          `json:"envs,omitempty"`
+	Sources      []Source       `json:"sources,omitempty"`
+	Graph        []Edge         `json:"graph,omitempty"`
+	Unpinned     []UnpinnedRisk `json:"unpinned_risks,omitempty"`
+	Dependencies []Dependency   `json:"dependencies,omitempty"`
 }
 
 type Agent struct {
@@ -76,6 +77,17 @@ type MCPServer struct {
 	SchemaHash  string   `json:"schema_hash"`
 	Permissions []string `json:"permissions,omitempty"`
 	Source      string   `json:"source,omitempty"`
+}
+
+// Dependency is a non-AI package dependency (npm/pip/go/etc) tracked for the
+// agent-driven supply-chain gate: an AI artifact change that co-occurs with a
+// new dependency raises NEEDS_APPROVAL (see internal/diff.dependencyExpansion).
+type Dependency struct {
+	ID        string `json:"id"`
+	Ecosystem string `json:"ecosystem,omitempty"` // npm|pip|go|cargo|package
+	Version   string `json:"version,omitempty"`
+	Hash      string `json:"hash"`
+	Source    string `json:"source,omitempty"`
 }
 
 type EvalHook struct {

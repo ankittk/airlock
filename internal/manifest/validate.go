@@ -119,6 +119,9 @@ func Artifacts(m *Manifest) []ArtifactRef {
 	for _, x := range m.Envs {
 		out = append(out, ArtifactRef{Kind: "env", ID: x.ID, Hash: x.ContentHash})
 	}
+	for _, x := range m.Dependencies {
+		out = append(out, ArtifactRef{Kind: "dependency", ID: x.ID, Hash: x.Hash})
+	}
 	for _, a := range m.Agents {
 		payload := a.ID + "|" + strings.Join(a.Models, ",") + "|" + strings.Join(a.Prompts, ",") +
 			"|" + strings.Join(a.Tools, ",") + "|" + strings.Join(a.Skills, ",") + "|" + strings.Join(a.MCP, ",")

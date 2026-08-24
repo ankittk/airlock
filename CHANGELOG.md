@@ -8,8 +8,11 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ## [Unreleased]
 
 ### Added
+- Agent-driven supply chain: APM package dependencies tracked as `manifest.Dependency`; a new dependency landing alongside an AI-artifact change (prompt/skill/MCP/agent) raises `NEEDS_APPROVAL` in `airlock diff` / `airlock ci --fail-on-approval`. Dependency-only PRs are left to SCA.
+
 ### Changed
 ### Fixed
+- `airlock ci --comment` no longer bypasses `--fail-on-approval` / `--fail-on-eval` / `fail_on_ai_change` — it now only changes the stdout format and still writes `ci-comment.md`; the fail-closed gate always runs.
 
 ## [0.1.0-beta.2] – 2026-08-21
 

@@ -461,18 +461,22 @@ func cmdCI(args []string) error {
 	body := diff.FormatComment(dr) + evalMD
 	if commentOnly {
 		fmt.Print(body)
-		return nil
-	}
-	fmt.Print(diff.FormatText(dr))
-	if evalReport != nil {
-		fmt.Print(policy.FormatTable(*evalReport))
+	} else {
+		fmt.Print(diff.FormatText(dr))
+		if evalReport != nil {
+			fmt.Print(policy.FormatTable(*evalReport))
+		}
 	}
 	commentPath := filepath.Join(store.ForRoot(root).Airlock, "ci-comment.md")
 	if err := os.WriteFile(commentPath, []byte(body), 0o644); err != nil {
 		return err
 	}
-	fmt.Printf("Wrote %s\n", commentPath)
+	if !commentOnly {
+		fmt.Printf("Wrote %s\n", commentPath)
+	}
 
+	// Fail-closed checks below MUST run regardless of --comment: a PR-comment
+	// mode is an output-format choice, not an escape hatch from the gate.
 	fail := failFlag || store.ReadPolicyFailOnChange(store.ForRoot(root))
 	if fail && diff.HasChanges(dr) {
 		return fmt.Errorf("AI artifacts changed (fail_on_ai_change)")
