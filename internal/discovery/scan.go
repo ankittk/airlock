@@ -254,9 +254,15 @@ func applyAPM(root string, m *manifest.Manifest, lock *apmLock, src string) {
 				ID: id, Model: coalesce(dep.Model, id), ContentHash: h, Source: src, Confidence: "high",
 			})
 		default:
-			// packages map often has typed entries
-			if p, ok := lock.Packages[id]; ok {
-				_ = p
+			// not a known AI-artifact kind → track as a plain supply-chain dependency
+			if !hasDependency(m, id) {
+				h := dep.Hash
+				if h == "" {
+					h = manifest.HashString(id + "|" + dep.Version)
+				}
+				m.Dependencies = append(m.Dependencies, manifest.Dependency{
+					ID: id, Ecosystem: coalesce(dep.Type, "package"), Version: dep.Version, Hash: h, Source: src,
+				})
 			}
 		}
 	}
@@ -285,6 +291,13 @@ func applyAPM(root string, m *manifest.Manifest, lock *apmLock, src string) {
 		case "model":
 			if !hasModel(m, id) {
 				m.Models = append(m.Models, manifest.Model{ID: id, Model: coalesce(pkg.Name, id), ContentHash: h, Source: src, Confidence: "high"})
+			}
+		default:
+			// unrecognized kind (npm/pip/go/cargo/…) → plain supply-chain dependency
+			if !hasDependency(m, id) {
+				m.Dependencies = append(m.Dependencies, manifest.Dependency{
+					ID: id, Ecosystem: coalesce(pkg.Kind, "package"), Version: pkg.Version, Hash: h, Source: src,
+				})
 			}
 		}
 	}
@@ -345,6 +358,15 @@ func hasMCP(m *manifest.Manifest, id string) bool {
 
 func hasModel(m *manifest.Manifest, id string) bool {
 	for _, x := range m.Models {
+		if x.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+func hasDependency(m *manifest.Manifest, id string) bool {
+	for _, x := range m.Dependencies {
 		if x.ID == id {
 			return true
 		}

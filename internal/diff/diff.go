@@ -78,7 +78,39 @@ func Compare(base, head *manifest.Snapshot) *Result {
 		r.AffectedEvals = xslices.UniqueSorted(append(r.AffectedEvals, e2...))
 	}
 	r.NeedsApproval, r.ApprovalReasons = permissionExpansion(base, head, r.Changes)
+	if depNeeds, depReasons := dependencyExpansion(r.Changes); depNeeds {
+		r.NeedsApproval = true
+		r.ApprovalReasons = xslices.UniqueSorted(append(r.ApprovalReasons, depReasons...))
+	}
 	return r
+}
+
+// dependencyExpansion flags a new (non-AI) package dependency landing in the
+// same PR as an AI artifact change — agent-driven supply chain: the diff looks
+// like "prompt tweak" but quietly widens what the app depends on. A dep-only
+// PR with no AI artifact change is left alone; that is SCA's job, not ours.
+func dependencyExpansion(changes []Change) (bool, []string) {
+	var aiChanged bool
+	var added []string
+	for _, c := range changes {
+		if c.Kind == "dependency" {
+			if c.Status == "added" {
+				added = append(added, c.ID)
+			}
+			continue
+		}
+		if c.Status == "added" || c.Status == "changed" {
+			aiChanged = true
+		}
+	}
+	if !aiChanged || len(added) == 0 {
+		return false, nil
+	}
+	reasons := make([]string, 0, len(added))
+	for _, id := range added {
+		reasons = append(reasons, "new dependency: "+id)
+	}
+	return true, reasons
 }
 
 func permissionExpansion(base, head *manifest.Snapshot, changes []Change) (bool, []string) {

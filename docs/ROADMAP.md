@@ -72,6 +72,7 @@ Local-first Go CLI + sample GitHub Action. State under `.airlock/`. No telemetry
 - **Promptfoo import**, cassette replay, judge calibrate (beta-thin where noted)
 - **OTel ingest → baseline / drift** — thin production loop
 - **Sample workflow** — [`.github/workflows/airlock.yml`](../.github/workflows/airlock.yml)
+- **Agent-driven supply chain** — APM package dependencies tracked as `manifest.Dependency`; a new dependency landing alongside an AI-artifact change (prompt/skill/MCP/agent) raises `NEEDS_APPROVAL` in blast radius. A dependency-only PR is left to SCA (Dependabot / Socket / cargo-vet) — that stays their problem.
 
 Discovery honesty and MCP demo: [GUIDE](GUIDE.md).
 
@@ -79,7 +80,7 @@ Discovery honesty and MCP demo: [GUIDE](GUIDE.md).
 
 ## Phase 4 — Next
 
-Focus: deeper discovery, eval **flexibility** (ideas from LangSmith-class products), Sentinel, and **agent-driven supply chain** on the release surface.
+Focus: deeper discovery, eval **flexibility** (ideas from LangSmith-class products), and Sentinel.
 
 ### Model Sentinel
 
@@ -109,17 +110,7 @@ Steal **flexibility**, not the hosted product.
 | Judges as shared assets | Richer multi-turn judges + calibrate | Workspace SaaS judge catalog only |
 | Bring existing work | **Import connectors** (LangSmith / Braintrust / Promptfoo exports) | Replacing their platforms |
 
-### Agent-driven supply chain
-
-Classic malware in npm / crates.io / PyPI is still **SCA** (Dependabot, Socket, cargo-vet, Sigstore). Attacks at build time (e.g. malicious crate build scripts) stay their problem.
-
-Agents make it worse by proposing or merging dependencies at machine speed.
-
-| | |
-|--|--|
-| **What** | When an AI change (prompt / skill / MCP / agent) also expands APM or language lockfiles, put that in **blast radius** and raise **`NEEDS_APPROVAL`** (or fail closed). |
-| **Why (easy)** | The PR looks like “prompt tweak” but quietly adds packages. |
-| **Integrate** | Airlock = release decision on the widened surface. SCA = malware content. Both in CI. |
+Agent-driven supply chain (APM dependency co-occurring with an AI-artifact change → `NEEDS_APPROVAL`) shipped in beta — see **Shipped** above. Next up here is widening the *sources* it reads (today: APM `packages:` map only) to `go.sum` / `package-lock.json` / `Cargo.lock` directly, without APM as an intermediary.
 
 ---
 
