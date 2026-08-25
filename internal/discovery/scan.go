@@ -2,6 +2,7 @@ package discovery
 
 import (
 	"cmp"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -38,8 +39,15 @@ func Scan(root string) (*manifest.Manifest, error) {
 	if err := scanCursorRules(abs, m); err != nil {
 		return nil, fmt.Errorf("cursor-rules: %w", err)
 	}
-	if err := scanMCP(abs, m); err != nil {
+	mcpConfigs, err := scanMCP(abs, m)
+	if err != nil {
 		return nil, fmt.Errorf("mcp: %w", err)
+	}
+	if err := scanOpenAIStack(abs, m); err != nil {
+		return nil, fmt.Errorf("openai-stack: %w", err)
+	}
+	if len(mcpConfigs) > 0 {
+		enrichMCPSchemas(context.Background(), nil, m, mcpConfigs)
 	}
 	if err := scanModelHeuristics(abs, m); err != nil {
 		return nil, fmt.Errorf("models: %w", err)
@@ -516,7 +524,8 @@ func scanCursorRules(root string, m *manifest.Manifest) error {
 
 // --- MCP ---
 
-func scanMCP(root string, m *manifest.Manifest) error {
+func scanMCP(root string, m *manifest.Manifest) (map[string]json.RawMessage, error) {
+	configs := map[string]json.RawMessage{}
 	candidates := []string{
 		"mcp.json", ".mcp.json", ".cursor/mcp.json",
 		"claude_desktop_config.json", ".vscode/mcp.json",
@@ -528,7 +537,7 @@ func scanMCP(root string, m *manifest.Manifest) error {
 			if os.IsNotExist(err) {
 				continue
 			}
-			return err
+			return nil, err
 		}
 		m.Sources = append(m.Sources, manifest.Source{Kind: "mcp.json", Path: c})
 		var raw map[string]json.RawMessage
@@ -541,6 +550,9 @@ func scanMCP(root string, m *manifest.Manifest) error {
 				})
 			}
 			continue
+		}
+		for k, v := range collectMCPConfigs(raw) {
+			configs[k] = v
 		}
 		// Claude Desktop / Cursor style: mcpServers map
 		if serversRaw, ok := raw["mcpServers"]; ok {
@@ -566,7 +578,7 @@ func scanMCP(root string, m *manifest.Manifest) error {
 			})
 		}
 	}
-	return nil
+	return configs, nil
 }
 
 // --- model heuristics ---

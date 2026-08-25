@@ -80,6 +80,9 @@ func Resolve(name string, client HTTPDoer) (Provider, error) {
 // Mock returns deterministic responses for offline tests.
 type Mock struct{}
 
+// MockSentinelReply overrides the sentinel probe response in tests.
+var MockSentinelReply = "AIRLOCK_SENTINEL_v1"
+
 func (m *Mock) Name() string { return "mock" }
 
 func (m *Mock) Generate(ctx context.Context, req Request) (Response, error) {
@@ -102,6 +105,9 @@ func (m *Mock) Generate(ctx context.Context, req Request) (Response, error) {
 	text := `{"ok":true,"answer":"mock"}`
 	if strings.Contains(user, "exact:") {
 		text = strings.TrimSpace(strings.SplitN(user, "exact:", 2)[1])
+	}
+	if strings.Contains(user, "AIRLOCK_SENTINEL_v1") {
+		text = MockSentinelReply
 	}
 	return Response{
 		Text:    text,

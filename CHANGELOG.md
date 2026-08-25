@@ -8,6 +8,10 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ## [Unreleased]
 
 ### Added
+- **Model Sentinel** (`airlock sentinel probe|check`): fingerprint upstream models with a fixed probe prompt; detect silent provider drift when the config model string is unchanged. `--fail-on-sentinel` on `airlock ci`; `airlock snapshot --sentinel` folds fingerprints into the manifest.
+- **OpenAI / LangGraph stack scanner**: discover `ChatOpenAI` / `model=` strings in Python, TS/JS, and Go source; LangGraph imports tagged as `langgraph-scan`.
+- **Live MCP schema fetch**: HTTP(S) MCP servers get `tools/list` schema hashed at scan time (`+mcp-live` source tag); stdio servers stay config-hash only.
+
 ### Changed
 ### Fixed
 
@@ -78,7 +82,7 @@ Install from this tag (not beta.1). One pin lives in [README — Install](README
 ### Known limits (honest)
 
 - No hosted control plane / SSO / K8s admission (Phases 5–6)
-- No `airlock sentinel` or deep SDK/LangGraph AST scan yet (Phase 4)
+- Eval flexibility slice of Phase 4 not yet shipped (artifact→suite binding, experiment compare, …)
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 

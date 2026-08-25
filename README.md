@@ -48,7 +48,7 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 | Teams that change prompts or models often and want PR gates | Expecting a hosted org dashboard today (Phase 5) |
 | Repos with eval cases / Promptfoo, or OTel GenAI spans | Need deep LangGraph / Vercel AI / SDK AST discovery *now* (Phase 4) |
 
-**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), `airlock sentinel` (Phase 4), first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), eval-flexibility slice of Phase 4, first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -235,7 +235,8 @@ A full **AI release stack**, not a single command:
 | **Data boundary** | Fail release when PII/secrets appear in model I/O (`data_boundary.fail_on_pii`) |
 | **Rollback / routing hints** | Re-pin known-good manifest; emit decisions for gateways |
 | **Agent-driven supply chain** | APM dependency tracked as blast radius; `NEEDS_APPROVAL` when AI-artifact change co-occurs with a new dependency |
-| **Model Sentinel** *(Phase 4)* | Fingerprint upstream models; catch silent provider drift |
+| **Model Sentinel** | Fingerprint upstream models; catch silent provider drift (`airlock sentinel`) |
+| **Stack scanner** | OpenAI SDK + LangGraph heuristics; live MCP schema fetch for HTTP servers |
 | **Eval flexibility** *(Phase 4)* | Artifact→suite binding, deeper imports, experiment compare in CI, run→eval promotion |
 | **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
 | **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host; optional **publish gate** hooks (CI → registry) beside SCA/attestations |
@@ -270,10 +271,11 @@ flowchart TB
 | MCP configs / prompt files / `env.json` | Yes |
 | Model strings in config / `.env.example` | Heuristic |
 | Promptfoo / eval globs | Thin (Phase 4 deepen) |
-| OpenAI / Anthropic / Google SDK AST | Phase 4 |
-| Vercel AI SDK, LangGraph, CrewAI, … | Phase 4+ |
+| OpenAI SDK + LangGraph (py/ts/go heuristics) | Yes |
+| OpenAI / Anthropic / Google SDK full AST | Phase 4+ |
+| Vercel AI SDK, CrewAI, … | Phase 4+ |
 | Langfuse / remote prompt registries | Phase 4 |
-| Live MCP schema fetch | Config hash only (Phase 4) |
+| Live MCP schema fetch | HTTP(S) servers at scan time; stdio config-hash only |
 
 Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Airlock imports it. Details: [GUIDE — discovery](docs/GUIDE.md#discovery-coverage-honest).
 
@@ -288,6 +290,7 @@ Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Air
 | `ingest otel` / `baseline create` / `drift` | Production loop |
 | `judge calibrate` / `attribution` | Judge as a versioned dependency |
 | `approve` / `rollback` | Permission expansion + known-good re-pin |
+| `sentinel probe\|check` | Model fingerprint + silent drift detection |
 | `history` | Local release history (`--serve` for read-only UI) |
 
 Gates fire only when a confidence interval **excludes** the threshold. Cassettes replay identical provider calls by request hash (not Docker layers).
@@ -299,7 +302,7 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 | Phase | Status | Scope |
 |-------|--------|--------|
 | **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample + agent-driven supply chain |
-| **4** | Next | Sentinel, stack scanner, eval flexibility |
+| **4** | In progress | Sentinel + stack scanner shipped; eval flexibility next |
 | **5** | Upcoming | Org control plane, review queues, org evaluators |
 | **6** | Upcoming | Platform (K8s, SSO, EU) + optional registry publish gate |
 
