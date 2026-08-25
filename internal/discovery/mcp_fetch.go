@@ -1,0 +1,149 @@
+package discovery
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/ankittk/airlock/internal/manifest"
+)
+
+// ponytail: HTTP/SSE url MCP only; stdio servers stay config-hash until spawn support lands.
+
+type mcpServerCfg struct {
+	URL     string            `json:"url"`
+	Headers map[string]string `json:"headers"`
+}
+
+// enrichMCPSchemas fetches live tool schemas for MCP servers with http(s) urls.
+func enrichMCPSchemas(ctx context.Context, client *http.Client, m *manifest.Manifest, configs map[string]json.RawMessage) {
+	if client == nil {
+		client = &http.Client{Timeout: 15 * time.Second}
+	}
+	for i := range m.MCPServers {
+		raw, ok := configs[m.MCPServers[i].Name]
+		if !ok {
+			raw, ok = configs[m.MCPServers[i].ID]
+		}
+		if !ok {
+			continue
+		}
+		var cfg mcpServerCfg
+		if err := json.Unmarshal(raw, &cfg); err != nil || cfg.URL == "" {
+			continue
+		}
+		if !strings.HasPrefix(strings.ToLower(cfg.URL), "http") {
+			continue
+		}
+		schema, err := fetchMCPToolsSchema(ctx, client, cfg)
+		if err != nil {
+			m.Unpinned = append(m.Unpinned, manifest.UnpinnedRisk{
+				Artifact: "mcp:" + m.MCPServers[i].ID,
+				Reason:   "live schema fetch: " + err.Error(),
+			})
+			continue
+		}
+		h := manifest.HashBytes(schema)
+		if h != m.MCPServers[i].SchemaHash {
+			m.MCPServers[i].SchemaHash = h
+			if !strings.Contains(m.MCPServers[i].Source, "mcp-live") {
+				m.MCPServers[i].Source += "+mcp-live"
+			}
+		}
+	}
+}
+
+func fetchMCPToolsSchema(ctx context.Context, client *http.Client, cfg mcpServerCfg) ([]byte, error) {
+	if err := mcpRPC(ctx, client, cfg, "initialize", map[string]any{
+		"protocolVersion": "2024-11-05",
+		"capabilities":    map[string]any{},
+		"clientInfo":      map[string]string{"name": "airlock", "version": "1"},
+	}); err != nil {
+		return nil, err
+	}
+	var tools any
+	if err := mcpRPCResult(ctx, client, cfg, "tools/list", map[string]any{}, &tools); err != nil {
+		return nil, err
+	}
+	return json.Marshal(tools)
+}
+
+func mcpRPC(ctx context.Context, client *http.Client, cfg mcpServerCfg, method string, params any) error {
+	var discard any
+	return mcpRPCResult(ctx, client, cfg, method, params, &discard)
+}
+
+func mcpRPCResult(ctx context.Context, client *http.Client, cfg mcpServerCfg, method string, params any, out any) error {
+	body, err := json.Marshal(map[string]any{
+		"jsonrpc": "2.0",
+		"id":      1,
+		"method":  method,
+		"params":  params,
+	})
+	if err != nil {
+		return err
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cfg.URL, bytes.NewReader(body))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	for k, v := range cfg.Headers {
+		req.Header.Set(k, v)
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 300 {
+		return fmt.Errorf("HTTP %s: %s", resp.Status, truncateMCP(data))
+	}
+	var envelope struct {
+		Result json.RawMessage `json:"result"`
+		Error  *struct {
+			Code    int    `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		return err
+	}
+	if envelope.Error != nil {
+		return fmt.Errorf("rpc %s: %s", method, envelope.Error.Message)
+	}
+	if out != nil && len(envelope.Result) > 0 {
+		return json.Unmarshal(envelope.Result, out)
+	}
+	return nil
+}
+
+func truncateMCP(b []byte) string {
+	if len(b) <= 120 {
+		return string(b)
+	}
+	return string(b[:120]) + "..."
+}
+
+// collectMCPConfigs gathers per-server raw JSON from parsed mcp config files.
+func collectMCPConfigs(raw map[string]json.RawMessage) map[string]json.RawMessage {
+	out := map[string]json.RawMessage{}
+	if serversRaw, ok := raw["mcpServers"]; ok {
+		var servers map[string]json.RawMessage
+		if err := json.Unmarshal(serversRaw, &servers); err == nil {
+			for name, cfg := range servers {
+				out[name] = cfg
+			}
+		}
+	}
+	return out
+}

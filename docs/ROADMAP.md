@@ -78,27 +78,27 @@ Discovery honesty and MCP demo: [GUIDE](GUIDE.md).
 
 ---
 
-## Phase 4 — Next
+## Phase 4 — In progress
 
 Focus: deeper discovery, eval **flexibility** (ideas from LangSmith-class products), and Sentinel.
 
-### Model Sentinel
+### Model Sentinel — shipped
 
 | | |
 |--|--|
-| **What** | Fingerprint upstream models; catch silent provider drift when the string in config did not change. |
+| **What** | `airlock sentinel probe\|check` fingerprints upstream models; catches silent provider drift when the string in config did not change. |
 | **Why (easy)** | Git never saw a commit, but the model behind `gpt-…` moved. |
-| **Integrate** | Diff / CI treat provider drift like any other AI change; still use your gateway for routing. |
+| **Integrate** | `airlock ci --fail-on-sentinel`; `airlock snapshot --sentinel` folds fingerprints into manifest `content_hash`. |
 
-### One stack scanner
+### One stack scanner — shipped
 
 | | |
 |--|--|
-| **What** | Deeper discovery for one real stack (e.g. LangGraph / major SDK AST), plus live MCP schema fetch where configs alone are not enough. |
-| **Why (easy)** | Today `init` is honest but thin on framework code. |
-| **Integrate** | Same manifest → snapshot → diff path; no “integrate langgraph” plugin required for the gate itself. |
+| **What** | OpenAI SDK + LangGraph heuristics in Python/TS/JS/Go; live MCP `tools/list` fetch for HTTP(S) servers at scan time. |
+| **Why (easy)** | Today `init` was honest but thin on framework code. |
+| **Integrate** | Same manifest → snapshot → diff path; stdio MCP stays config-hash until spawn support. |
 
-### Eval flexibility (borrow from LangSmith ideas)
+### Eval flexibility (borrow from LangSmith ideas) — next in Phase 4
 
 Steal **flexibility**, not the hosted product.
 

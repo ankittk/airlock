@@ -27,6 +27,7 @@ import (
 	"github.com/ankittk/airlock/internal/providers"
 	"github.com/ankittk/airlock/internal/replay"
 	"github.com/ankittk/airlock/internal/rollback"
+	"github.com/ankittk/airlock/internal/sentinel"
 	"github.com/ankittk/airlock/internal/snapshot"
 	"github.com/ankittk/airlock/internal/store"
 )
@@ -68,6 +69,8 @@ func main() {
 		err = cmdApprove(args)
 	case "rollback":
 		err = cmdRollback(args)
+	case "sentinel":
+		err = cmdSentinel(args)
 	case "version", "-v", "-version", "--version":
 		fmt.Printf("airlock %s\n", version)
 	case "help", "-h", "--help":
@@ -101,10 +104,11 @@ Commands:
   judge calibrate|attribution    Pin/calibrate judges; attribution on pin change
   approve --base ID --head ID    Record human approval for permission expansion
   rollback --to SNAPSHOT         Re-pin known-good manifest + routing hint JSON
+  sentinel probe|check           Fingerprint upstream models (silent drift)
   version / help
 
 test flags: --path --suite --affected --mode --json --baseline-results ID --adversarial
-ci flags:   --fail-on-change --fail-on-eval --fail-on-approval --comment --skip-eval --adversarial
+ci flags:   --fail-on-change --fail-on-eval --fail-on-approval --fail-on-sentinel --comment --skip-eval --adversarial
 redact:     --redact pii|hash|off (ingest / baseline)
 
 Local-first. No cloud upload.
@@ -154,13 +158,23 @@ func cmdInit(args []string) error {
 }
 
 func cmdSnapshot(args []string) error {
-	root, _, err := rootFromArgs(args)
+	root, args, err := rootFromArgs(args)
 	if err != nil {
 		return err
 	}
+	_, withSentinel := flagBool(args, "--sentinel")
 	snap, err := snapshot.Create(root, true)
 	if err != nil {
 		return err
+	}
+	if withSentinel {
+		if err := runSentinelProbe(root); err != nil {
+			return err
+		}
+		snap, err = snapshot.Create(root, false)
+		if err != nil {
+			return err
+		}
 	}
 	fmt.Println(snapshot.Summarize(snap))
 	return nil
@@ -373,6 +387,7 @@ func cmdCI(args []string) error {
 	args, failFlag := flagBool(args, "--fail-on-change")
 	args, failEval := flagBool(args, "--fail-on-eval")
 	args, failApproval := flagBool(args, "--fail-on-approval")
+	args, failSentinel := flagBool(args, "--fail-on-sentinel")
 	args, commentOnly := flagBool(args, "--comment")
 	args, skipEval := flagBool(args, "--skip-eval")
 	args, adversarial := flagBool(args, "--adversarial")
@@ -487,6 +502,18 @@ func cmdCI(args []string) error {
 	if failApproval {
 		if err := approval.Require(store.ForRoot(root).Approvals, base.ID, head.ID, dr.NeedsApproval); err != nil {
 			return err
+		}
+	}
+	if failSentinel || sentinelStoreExists(root) {
+		if rep, err := runSentinelCheck(root); err != nil {
+			if failSentinel {
+				return err
+			}
+		} else if rep.HasDrift() {
+			fmt.Print(sentinel.FormatText(rep))
+			if failSentinel {
+				return fmt.Errorf("model sentinel drift detected")
+			}
 		}
 	}
 	return nil
@@ -861,4 +888,102 @@ func cmdHistory(args []string) error {
 		fmt.Printf("%s  %-8s  %-16s  %s\n", e.ModTime.Format(time.RFC3339), e.Kind, e.ID, e.Verdict)
 	}
 	return nil
+}
+
+func cmdSentinel(args []string) error {
+	if len(args) < 1 {
+		return fmt.Errorf("usage: airlock sentinel probe|check [--path DIR] [--apply] [--json] [--fail]")
+	}
+	switch args[0] {
+	case "probe":
+		return cmdSentinelProbe(args[1:])
+	case "check":
+		return cmdSentinelCheck(args[1:])
+	default:
+		return fmt.Errorf("unknown sentinel subcommand %q", args[0])
+	}
+}
+
+func cmdSentinelProbe(args []string) error {
+	root, args, err := rootFromArgs(args)
+	if err != nil {
+		return err
+	}
+	_, apply := flagBool(args, "--apply")
+	if err := runSentinelProbe(root); err != nil {
+		return err
+	}
+	if apply {
+		p := store.ForRoot(root)
+		m, err := store.ReadManifest(p)
+		if err != nil {
+			return err
+		}
+		st, err := sentinel.Load(sentinel.DefaultPath(root))
+		if err != nil {
+			return err
+		}
+		sentinel.ApplyToManifest(m, st)
+		if err := store.WriteManifest(p, m); err != nil {
+			return err
+		}
+		fmt.Printf("Applied fingerprints to %s\n", p.Manifest)
+	}
+	fmt.Printf("Wrote %s\n", sentinel.DefaultPath(root))
+	return nil
+}
+
+func cmdSentinelCheck(args []string) error {
+	root, args, err := rootFromArgs(args)
+	if err != nil {
+		return err
+	}
+	args, asJSON := flagBool(args, "--json")
+	_, fail := flagBool(args, "--fail")
+	rep, err := runSentinelCheck(root)
+	if err != nil {
+		return err
+	}
+	if asJSON {
+		enc := json.NewEncoder(os.Stdout)
+		enc.SetIndent("", "  ")
+		if err := enc.Encode(rep); err != nil {
+			return err
+		}
+	} else {
+		fmt.Print(sentinel.FormatText(rep))
+	}
+	if fail && rep.HasDrift() {
+		return fmt.Errorf("model sentinel drift detected")
+	}
+	return nil
+}
+
+func runSentinelProbe(root string) error {
+	m, err := discovery.Scan(root)
+	if err != nil {
+		return err
+	}
+	if len(m.Models) == 0 {
+		return fmt.Errorf("no models in manifest to probe")
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	_, err = sentinel.ProbeAll(ctx, m, providers.DefaultHTTPClient(), sentinel.DefaultPath(root))
+	return err
+}
+
+func runSentinelCheck(root string) (*sentinel.CheckReport, error) {
+	m, err := discovery.Scan(root)
+	if err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	return sentinel.Check(ctx, m, providers.DefaultHTTPClient(), sentinel.DefaultPath(root))
+}
+
+func sentinelStoreExists(root string) bool {
+	_, err := os.Stat(sentinel.DefaultPath(root))
+	return err == nil
 }
