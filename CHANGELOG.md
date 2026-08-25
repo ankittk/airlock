@@ -8,12 +8,17 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ## [Unreleased]
 
 ### Added
+### Changed
+### Fixed
+
+## [0.1.0-beta.4] – 2026-08-25
+
+Phase 4.1 Model Sentinel + Phase 4.2 OpenAI/LangGraph stack scanner.
+
+### Added
 - **Model Sentinel** (`airlock sentinel probe|check`): fingerprint upstream models with a fixed probe prompt; detect silent provider drift when the config model string is unchanged. `--fail-on-sentinel` on `airlock ci`; `airlock snapshot --sentinel` folds fingerprints into the manifest.
 - **OpenAI / LangGraph stack scanner**: discover `ChatOpenAI` / `model=` strings in Python, TS/JS, and Go source; LangGraph imports tagged as `langgraph-scan`.
 - **Live MCP schema fetch**: HTTP(S) MCP servers get `tools/list` schema hashed at scan time (`+mcp-live` source tag); stdio servers stay config-hash only.
-
-### Changed
-### Fixed
 
 ## [0.1.0-beta.3] – 2026-08-24
 
@@ -86,7 +91,8 @@ Install from this tag (not beta.1). One pin lives in [README — Install](README
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 
-[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.3...HEAD
+[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.4...HEAD
+[0.1.0-beta.4]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.3...v0.1.0-beta.4
 [0.1.0-beta.3]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...v0.1.0-beta.3
 [0.1.0-beta.2]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.2
 [0.1.0-beta.1]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.1
