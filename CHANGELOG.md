@@ -11,6 +11,14 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ### Changed
 ### Fixed
 
+## [0.1.0-beta.5] – 2026-08-25
+
+Phase 4 complete: eval flexibility + lockfile supply chain.
+
+### Added
+- **Eval flexibility:** `.airlock/eval-bindings.yml` artifact→suite binding in `airlock ci`; experiment compare table vs baseline in CI/`airlock test`; `airlock eval promote --from ingest|results`; `import langsmith|braintrust`; multi-turn judge `turns` templates.
+- **Lockfile supply chain:** `go.sum`, `package-lock.json`, `Cargo.lock` read directly into `manifest.Dependency`.
+
 ## [0.1.0-beta.4] – 2026-08-25
 
 Phase 4.1 Model Sentinel + Phase 4.2 OpenAI/LangGraph stack scanner.
@@ -87,11 +95,11 @@ Install from this tag (not beta.1). One pin lives in [README — Install](README
 ### Known limits (honest)
 
 - No hosted control plane / SSO / K8s admission (Phases 5–6)
-- Eval flexibility slice of Phase 4 not yet shipped (artifact→suite binding, experiment compare, …)
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 
-[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.4...HEAD
+[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.5...HEAD
+[0.1.0-beta.5]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.4...v0.1.0-beta.5
 [0.1.0-beta.4]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.3...v0.1.0-beta.4
 [0.1.0-beta.3]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...v0.1.0-beta.3
 [0.1.0-beta.2]: https://github.com/ankittk/airlock/releases/tag/v0.1.0-beta.2

@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/ankittk/airlock/internal/approval"
+	"github.com/ankittk/airlock/internal/braintrust"
 	"github.com/ankittk/airlock/internal/cliargs"
 	"github.com/ankittk/airlock/internal/collector"
 	"github.com/ankittk/airlock/internal/diff"
@@ -21,6 +22,7 @@ import (
 	"github.com/ankittk/airlock/internal/evaluation"
 	"github.com/ankittk/airlock/internal/history"
 	"github.com/ankittk/airlock/internal/judge"
+	"github.com/ankittk/airlock/internal/langsmith"
 	"github.com/ankittk/airlock/internal/manifest"
 	"github.com/ankittk/airlock/internal/policy"
 	"github.com/ankittk/airlock/internal/promptfoo"
@@ -55,6 +57,8 @@ func main() {
 		err = cmdCI(args)
 	case "import":
 		err = cmdImport(args)
+	case "eval":
+		err = cmdEval(args)
 	case "ingest":
 		err = cmdIngest(args)
 	case "baseline":
@@ -96,7 +100,8 @@ Commands:
   init / snapshot / diff         Discover, snapshot, static blast-radius diff
   test                           Run eval suite (Wilson/bootstrap CIs, budgets)
   ci                             Diff + evals + NEEDS_APPROVAL + PR comment
-  import promptfoo <file>        Promptfoo YAML → evals JSONL
+  import promptfoo|langsmith|braintrust <file>  Import eval corpora
+  eval promote --from ingest|results     Promote runs → eval cases
   ingest otel --file spans.jsonl Ingest OTel GenAI JSONL (local redaction)
   baseline create --from ingest  Promote ingest → .airlock/evals/prod.jsonl
   drift [--baseline FILE]        Compare live ingest vs baseline success rates
@@ -151,6 +156,7 @@ func cmdInit(args []string) error {
 	if err := store.WritePolicyStub(p); err != nil {
 		return err
 	}
+	_ = evalcase.WriteBindingsStub(evalcase.DefaultBindingsPath(root))
 	fmt.Printf("Wrote %s\n", p.Manifest)
 	fmt.Printf("  agents=%d models=%d prompts=%d tools=%d skills=%d mcp=%d evals=%d\n",
 		len(m.Agents), len(m.Models), len(m.Prompts), len(m.Tools), len(m.Skills), len(m.MCPServers), len(m.Evals))
@@ -334,8 +340,10 @@ func cmdTest(args []string) error {
 		candID = snap.ID
 	}
 	cfg := evaluation.Config{Suite: suite, Policy: pol, Client: client, SnapshotID: candID}
+	var baseRes *evaluation.RunResult
 	if base, err := evaluation.FindBaseline(store.ForRoot(root).Results, baseResults); err == nil {
 		cfg.Baseline = evaluation.BaselineFromResult(base)
+		baseRes = base
 		fmt.Printf("paired baseline: %s\n", base.SnapshotID)
 	}
 	reg := loadJudges(root, client)
@@ -357,6 +365,11 @@ func cmdTest(args []string) error {
 		return enc.Encode(res)
 	}
 	fmt.Print(policy.FormatTable(res.Report))
+	if baseRes != nil {
+		if rows := evaluation.CompareResults(baseRes, res, pol); len(rows) > 0 {
+			fmt.Print(evaluation.FormatCompareText(rows))
+		}
+	}
 	if res.BudgetStopped {
 		fmt.Printf("budget_stopped total_cost=$%.4f\n", res.TotalCostUSD)
 	}
@@ -412,58 +425,35 @@ func cmdCI(args []string) error {
 
 	var evalMD string
 	var evalReport *policy.Report
+	var baseRes *evaluation.RunResult
 	if !skipEval {
-		if suiteDir, serr := resolveSuiteDir(root, ""); serr == nil {
-			suite, cases, lerr := evalcase.LoadSuite(suiteDir)
-			if lerr == nil && len(cases) > 0 {
-				wantAdv := adversarial || suite.Kind == "adversarial" || secSurface
-				if wantAdv {
-					if tagged := evalcase.FilterByTag(cases, "adversarial"); len(tagged) > 0 {
-						cases = tagged
-						if mcpTouched {
-							fmt.Println("MCP change detected: running adversarial cases")
-						} else if skillTouched {
-							fmt.Println("Skill change detected: running adversarial cases")
-						}
-					} else if secSurface {
-						advPath := filepath.Join(suiteDir, "suite.adversarial.yml")
-						if as, ac, aerr := evalcase.LoadSuiteFile(advPath); aerr == nil && len(ac) > 0 {
-							suite, cases = as, ac
-							why := "MCP"
-							if skillTouched && !mcpTouched {
-								why = "Skill"
-							}
-							fmt.Printf("%s change detected: loaded %s\n", why, advPath)
-						}
-					}
+		suite, cases, lerr := resolveCasesForDiff(root, dr, adversarial, secSurface, mcpTouched, skillTouched)
+		if lerr == nil && len(cases) > 0 {
+			pol, _ := policy.Load(store.ForRoot(root).Policy)
+			client, _ := buildHTTPClient(root, suite, suite.Mode)
+			cfg := evaluation.Config{Suite: suite, Policy: pol, Client: client, SnapshotID: head.ID}
+			if bres, err := evaluation.FindBaseline(store.ForRoot(root).Results, base.ID); err == nil {
+				cfg.Baseline = evaluation.BaselineFromResult(bres)
+				baseRes = bres
+			}
+			reg := loadJudges(root, client)
+			if len(reg.ByID) > 0 {
+				cfg.JudgeScore = judgeHook(reg)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+			res, rerr := evaluation.Run(ctx, cases, cfg)
+			cancel()
+			if rerr == nil {
+				res.Report = policy.WithNeedsApproval(res.Report, dr.NeedsApproval, dr.ApprovalReasons)
+				res.Report = applyJudgeFloors(res.Report, store.ForRoot(root).Judges, reg)
+				evalReport = &res.Report
+				evalMD = "\n" + policy.FormatMarkdown(res.Report)
+				if baseRes != nil {
+					evalMD += evaluation.FormatCompareMarkdown(evaluation.CompareResults(baseRes, res, pol))
 				}
-				if len(dr.AffectedAgents) > 0 {
-					if filtered := evalcase.FilterByAgents(cases, dr.AffectedAgents); len(filtered) > 0 {
-						cases = filtered
-					}
-				}
-				pol, _ := policy.Load(store.ForRoot(root).Policy)
-				client, _ := buildHTTPClient(root, suite, suite.Mode)
-				cfg := evaluation.Config{Suite: suite, Policy: pol, Client: client, SnapshotID: head.ID}
-				if bres, err := evaluation.FindBaseline(store.ForRoot(root).Results, base.ID); err == nil {
-					cfg.Baseline = evaluation.BaselineFromResult(bres)
-				}
-				reg := loadJudges(root, client)
-				if len(reg.ByID) > 0 {
-					cfg.JudgeScore = judgeHook(reg)
-				}
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
-				res, rerr := evaluation.Run(ctx, cases, cfg)
-				cancel()
-				if rerr == nil {
-					res.Report = policy.WithNeedsApproval(res.Report, dr.NeedsApproval, dr.ApprovalReasons)
-					res.Report = applyJudgeFloors(res.Report, store.ForRoot(root).Judges, reg)
-					evalReport = &res.Report
-					evalMD = "\n" + policy.FormatMarkdown(res.Report)
-					_ = evaluation.SaveResult(store.ForRoot(root).Results, head.ID, res)
-				} else {
-					evalMD = fmt.Sprintf("\n### Airlock eval\n\n_eval error: %v_\n", rerr)
-				}
+				_ = evaluation.SaveResult(store.ForRoot(root).Results, head.ID, res)
+			} else {
+				evalMD = fmt.Sprintf("\n### Airlock eval\n\n_eval error: %v_\n", rerr)
 			}
 		}
 	}
@@ -520,10 +510,23 @@ func cmdCI(args []string) error {
 }
 
 func cmdImport(args []string) error {
-	if len(args) < 1 || args[0] != "promptfoo" {
-		return fmt.Errorf("usage: airlock import promptfoo <file> [--path DIR]")
+	if len(args) < 1 {
+		return fmt.Errorf("usage: airlock import promptfoo|langsmith|braintrust <file> [--path DIR]")
 	}
-	root, rest, err := rootFromArgs(args[1:])
+	switch args[0] {
+	case "promptfoo":
+		return cmdImportPromptfoo(args[1:])
+	case "langsmith":
+		return cmdImportCases(args[1:], "langsmith")
+	case "braintrust":
+		return cmdImportCases(args[1:], "braintrust")
+	default:
+		return fmt.Errorf("unknown import source %q", args[0])
+	}
+}
+
+func cmdImportPromptfoo(args []string) error {
+	root, rest, err := rootFromArgs(args)
 	if err != nil {
 		return err
 	}
@@ -546,23 +549,151 @@ func cmdImport(args []string) error {
 	for _, w := range res.Warnings {
 		fmt.Fprintf(os.Stderr, "warning: %s\n", w)
 	}
+	return writeImportedCases(root, res.Cases, "default.jsonl")
+}
+
+func cmdImportCases(args []string, source string) error {
+	root, rest, err := rootFromArgs(args)
+	if err != nil {
+		return err
+	}
+	if len(rest) < 1 {
+		return fmt.Errorf("usage: airlock import %s <file> [--path DIR]", source)
+	}
+	file := rest[0]
+	if !filepath.IsAbs(file) {
+		cand := filepath.Join(root, file)
+		if _, err2 := os.Stat(cand); err2 == nil {
+			file = cand
+		}
+	}
+	var cases []evalcase.Case
+	switch source {
+	case "langsmith":
+		cases, err = langsmith.ImportFile(file)
+	case "braintrust":
+		cases, err = braintrust.ImportFile(file)
+	default:
+		return fmt.Errorf("unknown source %q", source)
+	}
+	if err != nil {
+		return err
+	}
+	outName := source + ".jsonl"
+	return writeImportedCases(root, cases, outName)
+}
+
+func writeImportedCases(root string, cases []evalcase.Case, outName string) error {
 	p := store.ForRoot(root)
 	if err := p.Ensure(); err != nil {
 		return err
 	}
-	out := filepath.Join(p.Evals, "default.jsonl")
-	if err := evalcase.WriteJSONL(out, res.Cases); err != nil {
+	out := filepath.Join(p.Evals, outName)
+	if err := evalcase.WriteJSONL(out, cases); err != nil {
 		return err
 	}
 	suitePath := filepath.Join(p.Evals, "suite.yml")
 	if _, err := os.Stat(suitePath); err != nil {
 		s := evalcase.DefaultSuite()
-		data := fmt.Sprintf("k: %d\nmin_samples: %d\nmax_samples_per_case: %d\nseed: %d\ncases: default.jsonl\nmode: live\nreplay_miss: fail\n",
-			s.K, s.MinSamples, s.MaxSamplesPerCase, s.Seed)
+		data := fmt.Sprintf("k: %d\nmin_samples: %d\nmax_samples_per_case: %d\nseed: %d\ncases: %s\nmode: replay\nreplay_miss: fail\n",
+			s.K, s.MinSamples, s.MaxSamplesPerCase, s.Seed, outName)
 		_ = os.WriteFile(suitePath, []byte(data), 0o644)
 	}
-	fmt.Printf("Imported %d cases → %s\n", len(res.Cases), out)
+	fmt.Printf("Imported %d cases → %s\n", len(cases), out)
 	return nil
+}
+
+func cmdEval(args []string) error {
+	if len(args) < 1 || args[0] != "promote" {
+		return fmt.Errorf("usage: airlock eval promote --from ingest|results [--failures-only] [--limit N] [--tag TAG] [--path DIR]")
+	}
+	root, rest, err := rootFromArgs(args[1:])
+	if err != nil {
+		return err
+	}
+	rest, from := flagVal(rest, "--from")
+	rest, tag := flagVal(rest, "--tag")
+	rest, limitS := flagVal(rest, "--limit")
+	_, failuresOnly := flagBool(rest, "--failures-only")
+	if from == "" {
+		from = "ingest"
+	}
+	opt := evalcase.PromoteOptions{FailuresOnly: failuresOnly, Tag: tag}
+	if limitS != "" {
+		opt.Limit, _ = strconv.Atoi(limitS)
+	}
+	p := store.ForRoot(root)
+	out := filepath.Join(p.Evals, "promoted.jsonl")
+	var n int
+	switch from {
+	case "ingest":
+		n, err = evaluation.PromoteFromIngest(filepath.Join(p.Ingest, "latest.jsonl"), out, opt)
+	case "results":
+		n, err = evaluation.PromoteFromResults(filepath.Join(p.Results, "latest.json"), out, opt)
+	default:
+		return fmt.Errorf("--from must be ingest or results")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Promoted %d cases → %s\n", n, out)
+	return nil
+}
+
+func resolveCasesForDiff(root string, dr *diff.Result, adversarial, secSurface, mcpTouched, skillTouched bool) (evalcase.Suite, []evalcase.Case, error) {
+	suiteDir, err := resolveSuiteDir(root, "")
+	if err != nil {
+		return evalcase.Suite{}, nil, err
+	}
+	p := store.ForRoot(root)
+	bindings, _ := evalcase.LoadBindings(evalcase.DefaultBindingsPath(root))
+	var changes []evalcase.ArtifactChange
+	for _, c := range dr.Changes {
+		changes = append(changes, evalcase.ArtifactChange{Kind: c.Kind, ID: c.ID, Status: c.Status})
+	}
+	if names := evalcase.SelectSuites(changes, bindings); len(names) > 0 && diff.HasChanges(dr) {
+		fmt.Printf("artifact → suite bindings: %s\n", strings.Join(names, ", "))
+		suite, cases, err := evalcase.LoadBoundCases(p.Evals, names)
+		if err == nil && len(cases) > 0 {
+			if len(dr.AffectedAgents) > 0 {
+				if filtered := evalcase.FilterByAgents(cases, dr.AffectedAgents); len(filtered) > 0 {
+					cases = filtered
+				}
+			}
+			return suite, cases, nil
+		}
+	}
+	suite, cases, lerr := evalcase.LoadSuite(suiteDir)
+	if lerr != nil || len(cases) == 0 {
+		return suite, cases, lerr
+	}
+	wantAdv := adversarial || suite.Kind == "adversarial" || secSurface
+	if wantAdv {
+		if tagged := evalcase.FilterByTag(cases, "adversarial"); len(tagged) > 0 {
+			cases = tagged
+			if mcpTouched {
+				fmt.Println("MCP change detected: running adversarial cases")
+			} else if skillTouched {
+				fmt.Println("Skill change detected: running adversarial cases")
+			}
+		} else if secSurface {
+			advPath := filepath.Join(suiteDir, "suite.adversarial.yml")
+			if as, ac, aerr := evalcase.LoadSuiteFile(advPath); aerr == nil && len(ac) > 0 {
+				suite, cases = as, ac
+				why := "MCP"
+				if skillTouched && !mcpTouched {
+					why = "Skill"
+				}
+				fmt.Printf("%s change detected: loaded %s\n", why, advPath)
+			}
+		}
+	}
+	if len(dr.AffectedAgents) > 0 {
+		if filtered := evalcase.FilterByAgents(cases, dr.AffectedAgents); len(filtered) > 0 {
+			cases = filtered
+		}
+	}
+	return suite, cases, nil
 }
 
 func cmdIngest(args []string) error {

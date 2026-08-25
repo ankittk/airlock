@@ -46,9 +46,9 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 |----------|----------------|
 | LLM apps / agents with prompts, tools, skills, or MCP | Pure CRUD with no model/prompt/tool surface |
 | Teams that change prompts or models often and want PR gates | Expecting a hosted org dashboard today (Phase 5) |
-| Repos with eval cases / Promptfoo, or OTel GenAI spans | Need deep LangGraph / Vercel AI / SDK AST discovery *now* (Phase 4) |
+| Repos with eval cases / Promptfoo, or OTel GenAI spans | Need full SDK AST for every framework *now* (Phase 5+) |
 
-**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), eval-flexibility slice of Phase 4, first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -58,8 +58,8 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 Pin a **pre-release** tag from [Releases](https://github.com/ankittk/airlock/releases) (GitHub “latest” skips them). Current tag: see [CHANGELOG](CHANGELOG.md).
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.4 bash
-# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.4
+curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.5 bash
+# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.5
 ```
 
 ## Quick start — break a prompt, watch Airlock catch it
@@ -237,7 +237,8 @@ A full **AI release stack**, not a single command:
 | **Agent-driven supply chain** | APM dependency tracked as blast radius; `NEEDS_APPROVAL` when AI-artifact change co-occurs with a new dependency |
 | **Model Sentinel** | Fingerprint upstream models; catch silent provider drift (`airlock sentinel`) |
 | **Stack scanner** | OpenAI SDK + LangGraph heuristics; live MCP schema fetch for HTTP servers |
-| **Eval flexibility** *(Phase 4)* | Artifact→suite binding, deeper imports, experiment compare in CI, run→eval promotion |
+| **Eval flexibility** | Artifact→suite bindings, experiment compare, eval promote, LangSmith/Braintrust import |
+| **Lockfile deps** | `go.sum` / `package-lock.json` / `Cargo.lock` → supply-chain blast radius |
 | **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
 | **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host; optional **publish gate** hooks (CI → registry) beside SCA/attestations |
 
@@ -270,7 +271,8 @@ flowchart TB
 | Cursor rules (`.cursor/rules/*.mdc`, `*.md`) | Yes (as `prompt`, source `cursor-rules`) |
 | MCP configs / prompt files / `env.json` | Yes |
 | Model strings in config / `.env.example` | Heuristic |
-| Promptfoo / eval globs | Thin (Phase 4 deepen) |
+| `go.sum` / `package-lock.json` / `Cargo.lock` | Yes (supply-chain dependencies) |
+| Promptfoo / eval globs | Yes (+ LangSmith / Braintrust import) |
 | OpenAI SDK + LangGraph (py/ts/go heuristics) | Yes |
 | OpenAI / Anthropic / Google SDK full AST | Phase 4+ |
 | Vercel AI SDK, CrewAI, … | Phase 4+ |
@@ -286,7 +288,8 @@ Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Air
 | `init` / `snapshot` / `diff` | Manifest discovery, release snapshots, blast-radius diff |
 | `test` / `ci` | Statistical evals + PR release decision |
 | `ci --fail-on-eval` / `--fail-on-approval` | Fail closed (company default) |
-| `import promptfoo` | Bring existing eval corpora |
+| `import promptfoo\|langsmith\|braintrust` | Bring existing eval corpora |
+| `eval promote --from ingest\|results` | Promote failed runs → eval cases |
 | `ingest otel` / `baseline create` / `drift` | Production loop |
 | `judge calibrate` / `attribution` | Judge as a versioned dependency |
 | `approve` / `rollback` | Permission expansion + known-good re-pin |
@@ -302,12 +305,12 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 | Phase | Status | Scope |
 |-------|--------|--------|
 | **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample + agent-driven supply chain |
-| **4** | In progress | Sentinel + stack scanner shipped; eval flexibility next |
-| **5** | Upcoming | Org control plane, review queues, org evaluators |
+| **4** | Done | Sentinel, stack scanner, eval flexibility, lockfile deps |
+| **5** | Next | Org control plane, review queues, org evaluators |
 | **6** | Upcoming | Platform (K8s, SSO, EU) + optional registry publish gate |
 
 ```text
-OSS beta  →  Phase 4  →  Phase 5  →  Phase 6
+OSS beta  →  Phase 5  →  Phase 6
 ```
 
 **Details:** [docs/ROADMAP.md](docs/ROADMAP.md) — LangSmith / CUSTODY / SCA integration maps, phase “what / why / integrate”, and non-goals.

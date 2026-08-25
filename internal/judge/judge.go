@@ -15,14 +15,15 @@ import (
 
 // Spec is a pinned judge declared in .airlock/judges/<id>.json or judges.yml entry.
 type Spec struct {
-	ID           string  `json:"id"`
-	Provider     string  `json:"provider"`
-	Model        string  `json:"model"`
-	Prompt       string  `json:"prompt"`
-	Rubric       string  `json:"rubric"`
-	PassContains string  `json:"pass_contains"` // default "PASS"
-	KappaFloor   float64 `json:"kappa_floor"`   // default 0.4
-	PromptHash   string  `json:"prompt_hash"`
+	ID           string             `json:"id"`
+	Provider     string             `json:"provider"`
+	Model        string             `json:"model"`
+	Prompt       string             `json:"prompt"`
+	Rubric       string             `json:"rubric"`
+	Turns        []evalcase.Message `json:"turns,omitempty"` // multi-turn judge template
+	PassContains string             `json:"pass_contains"`   // default "PASS"
+	KappaFloor   float64            `json:"kappa_floor"`     // default 0.4
+	PromptHash   string             `json:"prompt_hash"`
 }
 
 func (s Spec) Pin() string {
@@ -128,22 +129,42 @@ func (r *Registry) Score(ctx context.Context, id string, c evalcase.Case, resp p
 	if err != nil {
 		return false, err
 	}
-	prompt := s.Prompt
-	if prompt == "" {
-		prompt = "Score the assistant output. Reply PASS or FAIL only.\nRubric: " + s.Rubric
-	}
-	user := fmt.Sprintf("Input: %s\nOutput: %s\n%s", lastUser(c), resp.Text, prompt)
+	msgs := judgeMessages(s, c, resp)
 	out, err := p.Generate(ctx, providers.Request{
 		Provider: s.Provider,
 		Model:    s.Model,
-		Messages: []providers.Message{
-			{Role: "user", Content: user},
-		},
+		Messages: msgs,
 	})
 	if err != nil {
 		return false, err
 	}
 	return strings.Contains(strings.ToUpper(out.Text), strings.ToUpper(s.PassContains)), nil
+}
+
+func judgeMessages(s Spec, c evalcase.Case, resp providers.Response) []providers.Message {
+	if len(s.Turns) > 0 {
+		out := make([]providers.Message, 0, len(s.Turns)+2)
+		for _, t := range s.Turns {
+			out = append(out, providers.Message{
+				Role:    t.Role,
+				Content: expandJudgeTemplate(t.Content, c, resp, s),
+			})
+		}
+		return out
+	}
+	prompt := s.Prompt
+	if prompt == "" {
+		prompt = "Score the assistant output. Reply PASS or FAIL only.\nRubric: " + s.Rubric
+	}
+	user := fmt.Sprintf("Input: %s\nOutput: %s\n%s", lastUser(c), resp.Text, prompt)
+	return []providers.Message{{Role: "user", Content: user}}
+}
+
+func expandJudgeTemplate(text string, c evalcase.Case, resp providers.Response, s Spec) string {
+	text = strings.ReplaceAll(text, "{{input}}", lastUser(c))
+	text = strings.ReplaceAll(text, "{{output}}", resp.Text)
+	text = strings.ReplaceAll(text, "{{rubric}}", s.Rubric)
+	return text
 }
 
 func lastUser(c evalcase.Case) string {

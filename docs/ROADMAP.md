@@ -78,9 +78,9 @@ Discovery honesty and MCP demo: [GUIDE](GUIDE.md).
 
 ---
 
-## Phase 4 — In progress
+## Phase 4 — Shipped
 
-Focus: deeper discovery, eval **flexibility** (ideas from LangSmith-class products), and Sentinel.
+Focus was deeper discovery, eval **flexibility**, and Sentinel. All Phase 4 items below are in the OSS beta toolchain.
 
 ### Model Sentinel — shipped
 
@@ -98,19 +98,19 @@ Focus: deeper discovery, eval **flexibility** (ideas from LangSmith-class produc
 | **Why (easy)** | Today `init` was honest but thin on framework code. |
 | **Integrate** | Same manifest → snapshot → diff path; stdio MCP stays config-hash until spawn support. |
 
-### Eval flexibility (borrow from LangSmith ideas) — next in Phase 4
+### Eval flexibility — shipped
 
-Steal **flexibility**, not the hosted product.
+| Idea | Airlock shape | Status |
+|------|---------------|--------|
+| Bind tests to what changed | `.airlock/eval-bindings.yml` → suite selection in `airlock ci` | Shipped |
+| Compare versions before ship | Experiment compare table in CI PR comment + `airlock test` | Shipped |
+| Prod pain → better tests | `airlock eval promote --from ingest\|results` | Shipped |
+| Judges as shared assets | Multi-turn judge `turns` + `{{input}}`/`{{output}}` templates | Shipped |
+| Bring existing work | `import langsmith`, `import braintrust`, `import promptfoo` | Shipped |
 
-| Idea | Airlock shape | Not Airlock |
-|------|---------------|-------------|
-| Bind tests to what changed | **Artifact → suite binding** (change prompt X → run suite Y) | Prompt playground UI |
-| Compare versions before ship | **Experiment compare in CI** (candidate vs baseline in the PR) | Hosted experiment dashboards |
-| Prod pain → better tests | **Run → eval-case promotion** (OTel / exported traces → local cases) | Full trace UI / Polly / Insights |
-| Judges as shared assets | Richer multi-turn judges + calibrate | Workspace SaaS judge catalog only |
-| Bring existing work | **Import connectors** (LangSmith / Braintrust / Promptfoo exports) | Replacing their platforms |
+### Lockfile supply chain — shipped
 
-Agent-driven supply chain (APM dependency co-occurring with an AI-artifact change → `NEEDS_APPROVAL`) shipped in beta — see **Shipped** above. Next up here is widening the *sources* it reads (today: APM `packages:` map only) to `go.sum` / `package-lock.json` / `Cargo.lock` directly, without APM as an intermediary.
+Reads `go.sum`, `package-lock.json`, and `Cargo.lock` directly into `manifest.Dependency` (alongside APM). Same agent-driven supply-chain gate: new dependency + AI-artifact change → `NEEDS_APPROVAL`.
 
 ---
 
@@ -172,7 +172,7 @@ Keep them for traces, online evals, datasets, playground, annotation.
 3. Commit `.airlock/policy.yml`; add the [sample Action](../.github/workflows/airlock.yml); fail closed as needed.
 4. Optional: `ingest otel` → baseline / drift (file/JSONL path — not a live LangSmith API sync yet).
 
-**Later (Phase 4–5):** native import connectors, suite binding, review queues that feed the gate — still no Airlock-hosted trace UI.
+**Later (Phase 5):** review queues that feed the gate — still no Airlock-hosted trace UI.
 
 Also: [README — If you use LangSmith](../README.md#if-you-use-langsmith-or-braintrust--langfuse--phoenix).
 

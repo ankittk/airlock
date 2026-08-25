@@ -30,6 +30,9 @@ func Scan(root string) (*manifest.Manifest, error) {
 	if err := importAPM(abs, m); err != nil {
 		return nil, fmt.Errorf("apm: %w", err)
 	}
+	if err := scanLockfileDeps(abs, m); err != nil {
+		return nil, fmt.Errorf("lockfiles: %w", err)
+	}
 	if err := scanPrompts(abs, m); err != nil {
 		return nil, fmt.Errorf("prompts: %w", err)
 	}
