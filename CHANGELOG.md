@@ -7,8 +7,10 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 
 ## [Unreleased]
 
-### Added
 ### Changed
+- Docs: sharper wedge — OSS AI release gate now; team/enterprise control plane Phases 5–6; release agent Phase 7; explicit non-goal for app CI test selection ([ROADMAP](docs/ROADMAP.md), README, GUIDE).
+
+### Added
 ### Fixed
 
 ## [0.1.0-beta.5] – 2026-08-25

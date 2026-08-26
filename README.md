@@ -2,11 +2,11 @@
 
 **AI release engineering.**
 
-CI gate for prompts, skills, MCP, and models.
+GitHub Actions for safely shipping AI agents — CI release gate for prompts, skills, MCP, and models. Not another eval platform.
 
 Airlock is the release-control layer for AI systems: it treats models, prompts, tools, skills, MCP servers, judges, and eval sets as a **releasable unit**, detects what changed, evaluates behavior against policy with **statistical confidence**, and **blocks or approves** the ship — including when the change came from upstream, not from your commit.
 
-The open-source distribution is a local-first Go toolchain (binary + CI Action + `.airlock/` store). That is how you run Airlock today; it is not the ceiling of the product.
+The open-source distribution is a local-first Go toolchain (binary + CI Action + `.airlock/` store). Prove that gate in CI first; the hosted control plane comes later (open-core).
 
 [![CI](https://github.com/ankittk/airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/ankittk/airlock/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -45,10 +45,10 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 | Good fit | Weak fit today |
 |----------|----------------|
 | LLM apps / agents with prompts, tools, skills, or MCP | Pure CRUD with no model/prompt/tool surface |
-| Teams that change prompts or models often and want PR gates | Expecting a hosted org dashboard today (Phase 5) |
-| Repos with eval cases / Promptfoo, or OTel GenAI spans | Need full SDK AST for every framework *now* (Phase 5+) |
+| Teams that change prompts or models often and want PR gates | Expecting a hosted org dashboard today (Phase 5+) |
+| Repos with eval cases / Promptfoo, or OTel GenAI spans | Need full SDK AST for every framework *now* |
 
-**Not yet:** hosted control plane (Phase 5), SSO / EU / K8s (Phase 6), first-party plugins for every gateway/framework. See [docs/ROADMAP.md](docs/ROADMAP.md).
+**Not yet:** hosted control plane (Phase 5), enterprise SSO / EU / K8s (Phase 6), release agent (Phase 7). See [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ---
 
@@ -239,8 +239,9 @@ A full **AI release stack**, not a single command:
 | **Stack scanner** | OpenAI SDK + LangGraph heuristics; live MCP schema fetch for HTTP servers |
 | **Eval flexibility** | Artifact→suite bindings, experiment compare, eval promote, LangSmith/Braintrust import |
 | **Lockfile deps** | `go.sum` / `package-lock.json` / `Cargo.lock` → supply-chain blast radius |
-| **Control plane** *(Phase 5)* | Shared history, approvals, audit, team policy, review queues, org evaluators |
-| **Platform** *(Phase 6)* | K8s admission, shadow releases, SSO, EU / self-host; optional **publish gate** hooks (CI → registry) beside SCA/attestations |
+| **Control plane** *(Phase 5)* | Team: shared history, approvals, audit, environments, Slack/Teams, regression analytics |
+| **Platform** *(Phase 6)* | Enterprise: SSO/RBAC, EU / self-host, K8s admission, publish gate beside SCA |
+| **Release agent** *(Phase 7)* | After gate trusted: investigate regressions, recommend rollback, open PRs |
 
 ```mermaid
 flowchart TB
@@ -274,9 +275,9 @@ flowchart TB
 | `go.sum` / `package-lock.json` / `Cargo.lock` | Yes (supply-chain dependencies) |
 | Promptfoo / eval globs | Yes (+ LangSmith / Braintrust import) |
 | OpenAI SDK + LangGraph (py/ts/go heuristics) | Yes |
-| OpenAI / Anthropic / Google SDK full AST | Phase 4+ |
-| Vercel AI SDK, CrewAI, … | Phase 4+ |
-| Langfuse / remote prompt registries | Phase 4 |
+| OpenAI / Anthropic / Google SDK full AST | Partial heuristics; deepen over time |
+| Vercel AI SDK, CrewAI, … | Not yet |
+| Langfuse / remote prompt registries | Not yet |
 | Live MCP schema fetch | HTTP(S) servers at scan time; stdio config-hash only |
 
 Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Airlock imports it. Details: [GUIDE — discovery](docs/GUIDE.md#discovery-coverage-honest).
@@ -304,18 +305,19 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 
 | Phase | Status | Scope |
 |-------|--------|--------|
-| **0–3 + Now** | Done (OSS beta) | Toolchain + harness skills/rules + fail-closed CI sample + agent-driven supply chain |
-| **4** | Done | Sentinel, stack scanner, eval flexibility, lockfile deps |
-| **5** | Next | Org control plane, review queues, org evaluators |
-| **6** | Upcoming | Platform (K8s, SSO, EU) + optional registry publish gate |
+| **0–4** | **Done (OSS beta)** | Release gate: manifest → diff → eval → policy → CI Action (+ Sentinel, stack scan, eval flexibility) |
+| **Next** | Proof | 10–20 teams with Action on real agent PRs — harden gate, don’t rush SaaS |
+| **5** | Later | Team control plane (open-core paid) |
+| **6** | Later | Enterprise platform (SSO, EU, admission, publish gate) |
+| **7** | Later | Release agent (investigate / rollback / PR) — only after gate trusted |
 
 ```text
-OSS beta  →  Phase 5  →  Phase 6
+OSS release gate (now)  →  prove in CI  →  Phase 5 team plane  →  Phase 6 enterprise  →  Phase 7 release agent
 ```
 
-**Details:** [docs/ROADMAP.md](docs/ROADMAP.md) — LangSmith / CUSTODY / SCA integration maps, phase “what / why / integrate”, and non-goals.
+**Details:** [docs/ROADMAP.md](docs/ROADMAP.md) — thesis, open-core, integration maps, explicit non-goals (incl. “not code test selection”).
 
-Design-partner outreach continues after the beta cut (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).
+Design-partner outreach continues (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 

@@ -1,6 +1,6 @@
 # Developer guide
 
-Airlock is **CI/CD for AI behavior**: a local-first Go CLI that treats models, prompts, tools, skills, MCP servers, judges, and evals as a releasable unit — then diffs, evaluates, and gates the ship.
+Airlock is the **release gate for AI agents** (local-first Go CLI): models, prompts, tools, skills, MCP servers, judges, and evals as a releasable unit — then diffs, evaluates, and gates the ship.
 
 **First public beta** — see [CHANGELOG](../CHANGELOG.md) for the current tag. Expect discovery gaps and CLI churn before 1.0.
 
@@ -42,7 +42,7 @@ Airlock sits **beside** frameworks, gateways, and observability — it does not 
 | Microsoft APM | Import `apm.lock.yaml` — do not re-implement package resolution |
 | Promptfoo | `import promptfoo` → Airlock eval JSONL |
 
-There is no first-party `integrate litellm|langgraph|langsmith` plugin yet. Integration is protocol-level (files, OTel JSONL, routing JSON). Native connectors = Phase 4–5.
+There is no first-party `integrate litellm|langgraph|langsmith` plugin yet. Integration is protocol-level (files, OTel JSONL, routing JSON). Native connectors deepen over time (Phase 5+ for org-level sync).
 
 ---
 
@@ -197,13 +197,15 @@ Skill adds/edits also raise `NEEDS_APPROVAL` (same fail-closed path).
 | MCP configs (`mcp.json`, Cursor/VS Code/Claude Desktop paths) | Yes |
 | Prompt files under `prompts/`, `*.prompt.md`, etc. | Yes |
 | Model strings in common config / `.env.example` | Heuristic only |
-| Promptfoo / eval path globs | Thin — deepen in Phase 4 |
+| Promptfoo / eval path globs | Yes (+ LangSmith / Braintrust import) |
 | `env.json` | Yes |
-| OpenAI / Anthropic / Google SDK AST scan | Phase 4 |
-| Vercel AI SDK, LangGraph, CrewAI, … | Phase 4+ |
-| Langfuse / remote prompt registries | Phase 4 |
+| OpenAI SDK + LangGraph (py/ts/go heuristics) | Yes |
+| OpenAI / Anthropic / Google SDK full AST | Partial; deepen over time |
+| Vercel AI SDK, CrewAI, … | Not yet |
+| Langfuse / remote prompt registries | Not yet |
 | Retrieval index / embedding version | Not yet |
-| Live MCP schema fetch | Config hash only — Phase 4 |
+| Live MCP schema fetch | HTTP(S) at scan time; stdio config-hash only |
+| `go.sum` / `package-lock.json` / `Cargo.lock` | Yes (supply-chain deps) |
 
 Anything discoverable but not hashable should show up as an **unpinned risk** in the snapshot when we can detect it — be honest about blind spots.
 
@@ -224,9 +226,9 @@ Anything discoverable but not hashable should show up as an **unpinned risk** in
 
 ## What not to expect yet
 
-Deferred work (Sentinel, eval flexibility, CUSTODY/LangSmith/SCA integration maps, publish gate, non-goals) lives in **[ROADMAP.md](ROADMAP.md)**. Do not expect Airlock to replace Promptfoo, LangSmith, Dependabot/Socket, APM, or a managed agent runtime.
+Hosted control plane, enterprise SSO, and the autonomic release agent are later — see **[ROADMAP.md](ROADMAP.md)**. Do not expect Airlock to replace Promptfoo, LangSmith, Dependabot/Socket, APM, or a managed agent runtime. Not a unit-test selection product for ordinary app CI.
 
-**Shipped in the OSS beta:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Security-in-CI docs — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
+**Shipped in the OSS beta:** harness skills/rules discovery, first-class `skill`, skill/MCP approval gates, Model Sentinel, eval flexibility, lockfile supply-chain gate — see [discovery](#discovery-coverage-honest) and [MCP approval demo](#mcp-approval-demo).
 
 Release notes: [CHANGELOG.md](../CHANGELOG.md).
 

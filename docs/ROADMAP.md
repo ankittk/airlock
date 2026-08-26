@@ -1,8 +1,61 @@
 # Airlock roadmap
 
-Plain-English plan for what ships next, what we borrow from neighboring products, and how Airlock is meant to sit **beside** them — not replace them.
+Plain-English plan: what shipped, what proves the wedge next, what waits for money.
 
-Install pin and product overview live in the [README](../README.md). Release history: [CHANGELOG](../CHANGELOG.md). How to cut a release: [RELEASING](RELEASING.md).
+Install pin and product overview: [README](../README.md). History: [CHANGELOG](../CHANGELOG.md). Cut a release: [RELEASING](RELEASING.md).
+
+---
+
+## Thesis
+
+**Airlock is the release gate for AI agents** — “GitHub Actions for safely shipping AI agents.”
+
+Not an eval platform. Not AI observability. Not AI lifecycle / governance suite. Not intelligent code-CI / test selection for unit tests.
+
+The production question:
+
+> Can I safely allow this AI change to reach production?
+
+```text
+What changed? (prompt / skill / MCP / model / tool / eval / deps)
+      ↓
+What agents are affected?          (blast radius)
+      ↓
+What production capabilities changed?  (permissions, schemas)
+      ↓
+What evaluations should run?
+      ↓
+Quality / cost / permission regress?
+      ↓
+Who must approve?
+      ↓
+SHIP / BLOCK / NEEDS_APPROVAL
+```
+
+**Open-core:**
+
+| Free (OSS) | Paid later |
+|------------|------------|
+| CLI, GitHub Action, `.airlock/` store | Hosted control plane |
+| Snapshot / diff / blast radius | Shared history, org policy, environments |
+| Local evals + policy engine | Approvals (Slack/Teams), regression analytics |
+| Basic release gates in CI | SSO/RBAC, audit, EU residency, private runners |
+
+Prove the OSS gate in real CI first. Build the control plane around data those teams already produce.
+
+---
+
+## Where we are (honest)
+
+| Score (internal) | Layer | Status |
+|------------------|-------|--------|
+| **~8.5–9** | OSS AI release gate | **Mostly here** — Phase 0–4 shipped as local-first Go CLI + sample Action |
+| **9 later** | Team / enterprise control plane | **Not built** — Phase 5–6 |
+| **9 later** | Release agent (investigate → recommend rollback → open PR) | **Not started** — Phase 7; only after the gate is trusted |
+
+OSS beta answers: one PR → Airlock understands the AI change → runs the right checks → trustworthy release decision. That is the product today.
+
+Still thin / not claimed as done: every framework SDK AST, hosted dashboard, multi-org policy, autonomic rollback agent.
 
 ---
 
@@ -16,10 +69,12 @@ Behavior can change when someone edits a prompt, adds a skill, widens an MCP too
 
 It is **not**:
 
-- an observability or prompt playground product (LangSmith and friends)
-- a runtime containment control framework (CUSTODY)
+- an observability or prompt playground (LangSmith and friends)
+- a generic eval SaaS (Promptfoo / Braintrust host that)
+- a runtime containment framework (CUSTODY)
 - a package-malware scanner (Dependabot, Socket, cargo-vet, Sigstore)
 - a managed agent host or payment rail
+- **intelligent unit-test selection / “CI for all AI-written code”** (different product; see [non-goals](#non-goals))
 
 Those tools answer different questions. Airlock answers: **is this AI change safe to release?**
 
@@ -60,7 +115,7 @@ edit agent artifacts
 
 ---
 
-## Shipped (OSS beta / Now)
+## Shipped (OSS beta / Now) — the 8.5–9 wedge
 
 Local-first Go CLI + sample GitHub Action. State under `.airlock/`. No telemetry by default. Apache-2.0.
 
@@ -73,55 +128,34 @@ Local-first Go CLI + sample GitHub Action. State under `.airlock/`. No telemetry
 - **OTel ingest → baseline / drift** — thin production loop
 - **Sample workflow** — [`.github/workflows/airlock.yml`](../.github/workflows/airlock.yml)
 - **Agent-driven supply chain** — APM package dependencies tracked as `manifest.Dependency`; a new dependency landing alongside an AI-artifact change (prompt/skill/MCP/agent) raises `NEEDS_APPROVAL` in blast radius. A dependency-only PR is left to SCA (Dependabot / Socket / cargo-vet) — that stays their problem.
+- **Model Sentinel** — `airlock sentinel probe|check`; silent provider drift when the config string did not change
+- **Stack scanner** — OpenAI SDK + LangGraph heuristics; live MCP `tools/list` for HTTP(S) at scan time
+- **Eval flexibility** — `.airlock/eval-bindings.yml`, experiment compare, `eval promote`, LangSmith/Braintrust/Promptfoo import, multi-turn judges
+- **Lockfile supply chain** — `go.sum` / `package-lock.json` / `Cargo.lock` → same agent-driven gate
 
 Discovery honesty and MCP demo: [GUIDE](GUIDE.md).
 
----
+### Next proof (not a big SaaS)
 
-## Phase 4 — Shipped
+Before Phase 5 dashboard work: **10–20 serious AI teams** with the Action on real agent PRs, blocking at least one scary permission / prompt / model change.
 
-Focus was deeper discovery, eval **flexibility**, and Sentinel. All Phase 4 items below are in the OSS beta toolchain.
+Harden what that needs: clearer PR comments, tighter blast-radius + permission-expansion story, more reliable discovery for common stacks, fail-closed defaults that teams keep on.
 
-### Model Sentinel — shipped
-
-| | |
-|--|--|
-| **What** | `airlock sentinel probe\|check` fingerprints upstream models; catches silent provider drift when the string in config did not change. |
-| **Why (easy)** | Git never saw a commit, but the model behind `gpt-…` moved. |
-| **Integrate** | `airlock ci --fail-on-sentinel`; `airlock snapshot --sentinel` folds fingerprints into manifest `content_hash`. |
-
-### One stack scanner — shipped
-
-| | |
-|--|--|
-| **What** | OpenAI SDK + LangGraph heuristics in Python/TS/JS/Go; live MCP `tools/list` fetch for HTTP(S) servers at scan time. |
-| **Why (easy)** | Today `init` was honest but thin on framework code. |
-| **Integrate** | Same manifest → snapshot → diff path; stdio MCP stays config-hash until spawn support. |
-
-### Eval flexibility — shipped
-
-| Idea | Airlock shape | Status |
-|------|---------------|--------|
-| Bind tests to what changed | `.airlock/eval-bindings.yml` → suite selection in `airlock ci` | Shipped |
-| Compare versions before ship | Experiment compare table in CI PR comment + `airlock test` | Shipped |
-| Prod pain → better tests | `airlock eval promote --from ingest\|results` | Shipped |
-| Judges as shared assets | Multi-turn judge `turns` + `{{input}}`/`{{output}}` templates | Shipped |
-| Bring existing work | `import langsmith`, `import braintrust`, `import promptfoo` | Shipped |
-
-### Lockfile supply chain — shipped
-
-Reads `go.sum`, `package-lock.json`, and `Cargo.lock` directly into `manifest.Dependency` (alongside APM). Same agent-driven supply-chain gate: new dependency + AI-artifact change → `NEEDS_APPROVAL`.
+Do **not** rush a huge hosted UI. Control plane follows CI trust.
 
 ---
 
-## Phase 5 — Control plane
+## Phase 5 — Team control plane (open-core paid)
 
-Shared product for teams, still local-first CLI underneath.
+Shared product for teams; local-first CLI stays underneath.
 
 | Item | Why (easy) | Steal / integrate |
 |------|------------|-------------------|
 | Shared history, approvals, audit | One repo’s `.airlock/` is not enough for an org | — |
 | Team policy sync | Same gates across many agent repos | — |
+| Environments | Staging vs prod agent configs | — |
+| Slack / Teams approval hooks | Humans in the loop without leaving chat | — |
+| Regression / release analytics | Cost + quality trends across releases | — |
 | **Annotation / review queues** | Humans review borderline runs and feed eval corpora | LangSmith annotation queues **idea**; Airlock stays the gate + ledger |
 | Org-level evaluator library | Attach one calibrated judge to many repos | LangSmith workspace evaluators **idea** |
 | Connectors to eval platforms | Pull experiments / datasets into CI gates | Import, do not host traces |
@@ -145,17 +179,47 @@ Runtime containment remains CUSTODY (and network / PAM). Airlock remains the **p
 
 ---
 
-## Phase 6 — Platform
+## Phase 6 — Enterprise platform
 
-Enterprise delivery and choke points after the gate exists.
+Enterprise delivery and choke points after the team control plane exists.
 
 | Item | Why (easy) |
 |------|------------|
+| SSO / SAML, RBAC | Org identity |
+| Audit logs, compliance exports | Procurement |
+| EU data residency, self-host / private runners | Data-boundary buyers |
+| Multi-org / multi-environment | Platform teams |
 | K8s admission / shadow releases | Stop bad agent configs at deploy time |
-| SSO, EU residency, self-host | Org requirements for a hosted control plane |
 | **Registry publish gate** | Block `npm publish` / crate release / similar until Airlock **and** SCA / attestations pass |
+| GitHub / GitLab / Argo / Spinnaker hooks | Meet existing release systems |
 
 **Explicit non-goal:** managed agent runtime, no-code Fleet-style host, or becoming the payment rail.
+
+---
+
+## Phase 7 — Release agent (after the gate is trusted)
+
+Autonomic release engineering on top of a gate teams already believe.
+
+```text
+PR → Release Agent → Diff / Eval / Policy → SHIP or BLOCK
+                         ↓
+              Production telemetry
+                         ↓
+              detect regression → investigate → recommend rollback → open PR
+```
+
+Example outcome (valuable):
+
+> Prompt v17 reduced task success 4.2% on customer-support cases, tool retries +18%, latency SLO exceeded — recommend block.
+
+Not:
+
+> Eval score = 0.82.
+
+**Rule:** deterministic signals first (manifest diff, blast radius, policy, stats, Sentinel). Agent reasons **on top** of those — it does not invent the test set or override fail-closed policy by vibes.
+
+Ship only after Phase 5-ish trust. Premature “release agent” demos without a trusted gate look like another AI wrapper.
 
 ---
 
@@ -208,11 +272,14 @@ Same pattern as ledger-style approval DAGs: deterministic code owns amount and a
 ## Non-goals
 
 - Replace LangSmith (or similar) as trace / playground / deploy product
+- Become a generic **AI evaluation platform** (we gate; they score)
 - Implement the CUSTODY framework as a product (vendor-neutral objectives stay theirs)
 - Replace Dependabot / Socket / cargo-vet / Sigstore for classic package malware
 - Re-implement [APM](https://github.com/microsoft/apm) package resolution (Airlock **imports** lockfiles)
 - Host managed agents / Fleet-style no-code runtime
 - Become a payment or issuing provider
+- **Intelligent unit-test / suite selection for ordinary application CI** (“run 320 of 8000 tests”) — different buyer, different moat; eval-*suite* selection for AI artifacts stays in-lane
+- AI lifecycle management / full observability / broad “governance suite” branding
 
 ---
 

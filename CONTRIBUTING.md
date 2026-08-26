@@ -48,9 +48,9 @@ Maintainers: see [docs/RELEASING.md](docs/RELEASING.md). Tag `v*` on `main` → 
 | Good fits | Usually out of scope (open an issue first) |
 |-----------|--------------------------------------------|
 | Bug fixes, docs, fixtures | Cloud control plane / SSO (Phase 5–6) |
-| Eval / policy / stats improvements | Full Model Sentinel (Phase 4) |
+| Eval / policy / stats improvements | Release agent / autonomic rollback (Phase 7) |
 | Discovery: skills, Cursor rules, APM / Promptfoo / OTel | Competing with APM install-time features |
-| CI gate / approval hardening | Every framework plugin at once |
+| CI gate / approval hardening | Every framework plugin at once; unit-test selection for app CI |
 
 Airlock **imports** APM lockfiles; it does not re-implement APM resolution. Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md).
 
