@@ -7,11 +7,27 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 
 ## [Unreleased]
 
+### Added
 ### Changed
-- Docs: sharper wedge — OSS AI release gate now; team/enterprise control plane Phases 5–6; release agent Phase 7; explicit non-goal for app CI test selection ([ROADMAP](docs/ROADMAP.md), README, GUIDE).
+### Fixed
+
+## [0.1.0-beta.6] – 2026-09-02
+
+Pre-Phase-5 hardening: clearer PR comments, tighter blast-radius/permission-expansion story — the two items named in [ROADMAP — Next proof](docs/ROADMAP.md#next-proof-not-a-big-saas).
 
 ### Added
+- PR comment now shows eval blast radius (not just agents) and a gate `reason` column alongside the verdict.
+- PR comment carries the exact `airlock approve --base --head` unblock command when `NEEDS_APPROVAL`, instead of leaving it in CI logs; omitted once already approved.
+- `airlock approve` prints the pending reasons before recording the ledger entry.
+- MCP servers carry `ToolNames` from the live `tools/list` fetch (HTTP(S) only); `airlock diff`/`ci` now diffs that set directly, so a genuinely new tool on a live server raises `NEEDS_APPROVAL` even when `apm.lock.yaml`'s `permissions:` was never hand-maintained.
+
+### Changed
+- Docs: sharper wedge — OSS AI release gate now; team/enterprise control plane Phases 5–6; release agent Phase 7; explicit non-goal for app CI test selection ([ROADMAP](docs/ROADMAP.md), README, GUIDE).
+- Dropped `"post"` from the write-tool name heuristic — false-positived on read-only names like `post_processing_helper`.
+
 ### Fixed
+- Sample GitHub Action skipped posting the PR comment whenever the fail-closed gate itself failed (`if: always()` was missing) — the exact PR a blocked-merge explanation matters most for got a silent red X and nothing else.
+- `WithNeedsApproval` no longer clobbers a real eval-`FAIL` summary with the approval note; the actual blocking reason now stays visible alongside it.
 
 ## [0.1.0-beta.5] – 2026-08-25
 
@@ -100,7 +116,8 @@ Install from this tag (not beta.1). One pin lives in [README — Install](README
 - Approvals are advisory unless CI passes `--fail-on-approval`
 - Windows install not supported yet
 
-[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.5...HEAD
+[Unreleased]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.6...HEAD
+[0.1.0-beta.6]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.5...v0.1.0-beta.6
 [0.1.0-beta.5]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.4...v0.1.0-beta.5
 [0.1.0-beta.4]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.3...v0.1.0-beta.4
 [0.1.0-beta.3]: https://github.com/ankittk/airlock/compare/v0.1.0-beta.2...v0.1.0-beta.3

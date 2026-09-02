@@ -58,8 +58,8 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 Pin a **pre-release** tag from [Releases](https://github.com/ankittk/airlock/releases) (GitHub “latest” skips them). Current tag: see [CHANGELOG](CHANGELOG.md).
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.5 bash
-# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.5
+curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.6 bash
+# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.6
 ```
 
 ## Quick start - break a prompt, watch Airlock catch it
