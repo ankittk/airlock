@@ -190,7 +190,9 @@ func permissionExpansion(base, head *manifest.Snapshot, changes []Change) (bool,
 
 func looksWriteTool(name string) bool {
 	n := strings.ToLower(name)
-	for _, k := range []string{"delete", "send", "write", "create", "payment", "email", "update", "post"} {
+	// "post" dropped: too generic, false-positives on read-only names like
+	// "post_processing_helper" / "status_update_checker" style tools.
+	for _, k := range []string{"delete", "send", "write", "create", "payment", "email", "update"} {
 		if strings.Contains(n, k) {
 			return true
 		}
@@ -325,6 +327,9 @@ func FormatComment(r *Result) string {
 	}
 	if len(r.AffectedAgents) > 0 {
 		fmt.Fprintf(&b, "\nBlast radius: agents **%s**\n", strings.Join(r.AffectedAgents, ", "))
+	}
+	if len(r.AffectedEvals) > 0 {
+		fmt.Fprintf(&b, "\nBlast radius: evals **%s**\n", strings.Join(r.AffectedEvals, ", "))
 	}
 	if r.NeedsApproval {
 		fmt.Fprintf(&b, "\n**NEEDS_APPROVAL:** %s\n", strings.Join(r.ApprovalReasons, "; "))

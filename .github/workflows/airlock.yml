@@ -74,11 +74,16 @@ jobs:
           git worktree remove --force "$work/head" || true
 
       - name: Comment on PR
-        if: github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request'
         uses: actions/github-script@v7
         with:
           script: |
             const fs = require('fs');
+            if (!fs.existsSync('/tmp/airlock-comment.md')) {
+              // Earlier step (checkout/build) failed before airlock ci ever ran;
+              // nothing to post — leave the red X on the Actions tab as the signal.
+              return;
+            }
             const body = fs.readFileSync('/tmp/airlock-comment.md', 'utf8');
             const marker = '### Airlock';
             const { data: comments } = await github.rest.issues.listComments({

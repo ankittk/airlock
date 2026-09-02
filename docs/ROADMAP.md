@@ -141,6 +141,10 @@ Before Phase 5 dashboard work: **10–20 serious AI teams** with the Action on r
 
 Harden what that needs: clearer PR comments, tighter blast-radius + permission-expansion story, more reliable discovery for common stacks, fail-closed defaults that teams keep on.
 
+**Done:** PR comment now shows eval blast radius (not just agents) and a gate `reason` column; comment carries the exact `airlock approve --base --head` unblock command instead of leaving it in CI logs; sample Action posts the PR comment even when the gate fails (`if: always()` — was silently skipped on the exact PR a blocked-merge comment matters most for); `WithNeedsApproval` no longer clobbers a real eval-fail reason with the approval note; `airlock approve` prints the pending reasons before recording; dropped `"post"` from the write-tool name heuristic (false-positived on `post_processing_helper`-style read-only tools).
+
+**Still open** (bigger scanner/model work, not squeezed into this pass): tool/MCP `SideEffect`/`Permissions` are populated only via hand-maintained `apm.lock.yaml` fields — the common `mcp.json`/live `tools/list` discovery path never sets them, so a genuinely new dangerous MCP tool can land as a bare `changed` with no `NEEDS_APPROVAL`; skill hashing covers only `SKILL.md`, not its scripts/resources; stdio MCP servers stay config-hash only (no spawn+introspect); Python/yarn/pnpm lockfiles aren't scanned for the agent-driven supply-chain gate (Go/npm/Cargo only); framework detection is OpenAI SDK + LangGraph only (no Anthropic/LlamaIndex/CrewAI/AutoGen/Vercel AI SDK); comparative eval gates (`task_success` regression, `adversarial_critical`) silently disappear from the report with no baseline yet, with no "no baseline" note; `--fail-on-eval` only trips on `FAIL`, never `INCONCLUSIVE`, so default-thresholds-vs-default-sample-size (0.99/0.995 min vs `max_samples_per_case: 5`) can sit at INCONCLUSIVE indefinitely with nothing surfaced.
+
 Do **not** rush a huge hosted UI. Control plane follows CI trust.
 
 ---

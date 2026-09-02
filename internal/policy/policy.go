@@ -209,10 +209,10 @@ func FormatTable(r Report) string {
 
 func FormatMarkdown(r Report) string {
 	s := fmt.Sprintf("### Airlock eval\n\n**Verdict: %s**\n\n", r.Overall)
-	s += "| metric | rate | 95% CI | gate |\n|---|---:|---|---|\n"
+	s += "| metric | rate | 95% CI | gate | reason |\n|---|---:|---|---|---|\n"
 	for _, m := range r.Metrics {
-		s += fmt.Sprintf("| `%s` | %.1f%% | [%.1f%%, %.1f%%] | **%s** |\n",
-			m.Name, m.CI.Estimate*100, m.CI.Low*100, m.CI.High*100, m.Verdict)
+		s += fmt.Sprintf("| `%s` | %.1f%% | [%.1f%%, %.1f%%] | **%s** | %s |\n",
+			m.Name, m.CI.Estimate*100, m.CI.Low*100, m.CI.High*100, m.Verdict, m.Reason)
 	}
 	return s
 }
@@ -222,11 +222,22 @@ func WithNeedsApproval(r Report, needs bool, reasons []string) Report {
 	if !needs {
 		return r
 	}
+	prevOverall := r.Overall
 	r.Overall = merge(r.Overall, NeedsApproval)
+	reason := "needs_approval"
 	if len(reasons) > 0 {
-		r.Summary = "needs_approval: " + reasons[0]
+		reason = "needs_approval: " + reasons[0]
+	}
+	if prevOverall == Fail {
+		// Fail already dominates the verdict (merge rank keeps it on top) — don't
+		// clobber the reason a reviewer actually needs with the approval note.
+		if r.Summary != "" {
+			r.Summary += "; " + reason
+		} else {
+			r.Summary = reason
+		}
 	} else {
-		r.Summary = "needs_approval"
+		r.Summary = reason
 	}
 	return r
 }

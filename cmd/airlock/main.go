@@ -464,6 +464,9 @@ func cmdCI(args []string) error {
 	}
 
 	body := diff.FormatComment(dr) + evalMD
+	if dr.NeedsApproval && !approval.Has(store.ForRoot(root).Approvals, base.ID, head.ID) {
+		body += fmt.Sprintf("\nRun `airlock approve --base %s --head %s` to unblock.\n", base.ID, head.ID)
+	}
 	if commentOnly {
 		fmt.Print(body)
 	} else {
@@ -963,6 +966,14 @@ func cmdApprove(args []string) error {
 	rec := approval.Record{
 		Base: base.ID, Head: head.ID,
 		Reasons: dr.ApprovalReasons, DecidedBy: by, Note: note,
+	}
+	if len(dr.ApprovalReasons) > 0 {
+		fmt.Println("Reasons requiring approval:")
+		for _, reason := range dr.ApprovalReasons {
+			fmt.Printf("  - %s\n", reason)
+		}
+	} else if !dr.NeedsApproval {
+		fmt.Println("Note: this base/head pair currently has no NEEDS_APPROVAL reasons — recording approval anyway.")
 	}
 	if err := approval.Write(p.Approvals, rec); err != nil {
 		return err

@@ -124,9 +124,9 @@ Blast radius: agents **support-bot**
 
 **Verdict: PASS**
 
-| metric | rate | 95% CI | gate |
-|---|---:|---|---|
-| `task_success` | 100.0% | [47.8%, 100.0%] | **PASS** |
+| metric | rate | 95% CI | gate | reason |
+|---|---:|---|---|---|
+| `task_success` | 100.0% | [47.8%, 100.0%] | **PASS** | no significant regression (delta CI [-0.02, 0.02]) |
 ```
 
 Flip the story — expand MCP power instead of a prompt:
@@ -147,7 +147,9 @@ $ airlock ci --comment --fail-on-approval
 ### Airlock
 …
 **NEEDS_APPROVAL:** MCP new permission write on local-fs
-exit 1   # merge blocked until: airlock approve --base … --head …
+
+Run `airlock approve --base … --head …` to unblock.
+exit 1   # merge blocked until approved
 ```
 
 Flip it again — a prompt edit that quietly rides in with a new dependency (agent-driven supply chain):

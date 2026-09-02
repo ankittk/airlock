@@ -127,6 +127,31 @@ func TestDependencyAloneDoesNotNeedApproval(t *testing.T) {
 	}
 }
 
+func TestBenignToolNameNoLongerFalsePositive(t *testing.T) {
+	base := &manifest.Snapshot{
+		ID: "base",
+		Artifacts: []manifest.ArtifactRef{
+			{Kind: "tool", ID: "post-processing-helper", Hash: "aaa"},
+		},
+		Manifest: manifest.Manifest{
+			Tools: []manifest.Tool{{ID: "post-processing-helper", Name: "post_processing_helper", SchemaHash: "aaa", SideEffect: "read"}},
+		},
+	}
+	head := &manifest.Snapshot{
+		ID: "head",
+		Artifacts: []manifest.ArtifactRef{
+			{Kind: "tool", ID: "post-processing-helper", Hash: "bbb"},
+		},
+		Manifest: manifest.Manifest{
+			Tools: []manifest.Tool{{ID: "post-processing-helper", Name: "post_processing_helper", SchemaHash: "bbb", SideEffect: "read"}},
+		},
+	}
+	r := diff.Compare(base, head)
+	if r.NeedsApproval {
+		t.Fatalf("read-only tool named with 'post' should not need approval: %+v", r)
+	}
+}
+
 func TestDependencyVersionBumpAloneDoesNotNeedApproval(t *testing.T) {
 	base := &manifest.Snapshot{
 		ID: "base",
