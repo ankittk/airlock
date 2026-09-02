@@ -127,6 +127,68 @@ func TestDependencyAloneDoesNotNeedApproval(t *testing.T) {
 	}
 }
 
+// TestNeedsApprovalOnMCPNewLiveTool guards the gap where Permissions[] (only
+// ever hand-maintained via apm.lock.yaml) stays unchanged but the server's
+// live tools/list actually grew a new tool — previously invisible to
+// permissionExpansion entirely.
+func TestNeedsApprovalOnMCPNewLiveTool(t *testing.T) {
+	base := &manifest.Snapshot{
+		ID: "base",
+		Artifacts: []manifest.ArtifactRef{
+			{Kind: "mcp", ID: "fs", Hash: "aaa"},
+		},
+		Manifest: manifest.Manifest{
+			MCPServers: []manifest.MCPServer{{ID: "fs", Name: "fs", SchemaHash: "aaa", ToolNames: []string{"read_file"}}},
+		},
+	}
+	head := &manifest.Snapshot{
+		ID: "head",
+		Artifacts: []manifest.ArtifactRef{
+			{Kind: "mcp", ID: "fs", Hash: "bbb"},
+		},
+		Manifest: manifest.Manifest{
+			MCPServers: []manifest.MCPServer{{ID: "fs", Name: "fs", SchemaHash: "bbb", ToolNames: []string{"read_file", "delete_file"}}},
+		},
+	}
+	r := diff.Compare(base, head)
+	if !r.NeedsApproval {
+		t.Fatalf("expected needs approval on new live MCP tool: %+v", r)
+	}
+	found := false
+	for _, reason := range r.ApprovalReasons {
+		if reason == "MCP new write-looking tool delete_file on fs" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("reasons: %v", r.ApprovalReasons)
+	}
+}
+
+// TestMCPUnchangedLiveToolsNoApproval guards against false positives: same
+// tool set, only SchemaHash churn (e.g. description wording), should not
+// re-flag tools already present on both sides.
+func TestMCPUnchangedLiveToolsNoApproval(t *testing.T) {
+	base := &manifest.Snapshot{
+		ID:        "base",
+		Artifacts: []manifest.ArtifactRef{{Kind: "mcp", ID: "fs", Hash: "aaa"}},
+		Manifest: manifest.Manifest{
+			MCPServers: []manifest.MCPServer{{ID: "fs", Name: "fs", SchemaHash: "aaa", ToolNames: []string{"read_file"}}},
+		},
+	}
+	head := &manifest.Snapshot{
+		ID:        "head",
+		Artifacts: []manifest.ArtifactRef{{Kind: "mcp", ID: "fs", Hash: "bbb"}},
+		Manifest: manifest.Manifest{
+			MCPServers: []manifest.MCPServer{{ID: "fs", Name: "fs", SchemaHash: "bbb", ToolNames: []string{"read_file"}}},
+		},
+	}
+	r := diff.Compare(base, head)
+	if r.NeedsApproval {
+		t.Fatalf("same tool set should not need approval: %+v", r)
+	}
+}
+
 func TestBenignToolNameNoLongerFalsePositive(t *testing.T) {
 	base := &manifest.Snapshot{
 		ID: "base",

@@ -2,9 +2,9 @@
 
 **AI release engineering.**
 
-GitHub Actions for safely shipping AI agents — CI release gate for prompts, skills, MCP, and models. Not another eval platform.
+GitHub Actions for safely shipping AI agents - CI release gate for prompts, skills, MCP, and models. Not another eval platform.
 
-Airlock is the release-control layer for AI systems: it treats models, prompts, tools, skills, MCP servers, judges, and eval sets as a **releasable unit**, detects what changed, evaluates behavior against policy with **statistical confidence**, and **blocks or approves** the ship — including when the change came from upstream, not from your commit.
+Airlock is the release-control layer for AI systems: it treats models, prompts, tools, skills, MCP servers, judges, and eval sets as a **releasable unit**, detects what changed, evaluates behavior against policy with **statistical confidence**, and **blocks or approves** the ship - including when the change came from upstream, not from your commit.
 
 The open-source distribution is a local-first Go toolchain (binary + CI Action + `.airlock/` store). Prove that gate in CI first; the hosted control plane comes later (open-core).
 
@@ -15,7 +15,7 @@ The open-source distribution is a local-first Go toolchain (binary + CI Action +
 
 > First public beta · no telemetry · [Apache-2.0](LICENSE) · state under `.airlock/` · versions in [CHANGELOG](CHANGELOG.md)  
 > **APM** tells you what the agent depends on · **eval platforms** tell you how it scored · **Airlock** tells you whether that change is safe to ship.  
-> Not a Promptfoo/Braintrust replacement — the release gate beside them.
+> Not a Promptfoo/Braintrust replacement - the release gate beside them.
 
 ---
 
@@ -62,9 +62,9 @@ curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AI
 # or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.5
 ```
 
-## Quick start — break a prompt, watch Airlock catch it
+## Quick start - break a prompt, watch Airlock catch it
 
-Clone this repo. Toy agent at `testdata/toy-agent` ships prompts, a skill, MCP, and replay cassettes — **no API keys**.
+Clone this repo. Toy agent at `testdata/toy-agent` ships prompts, a skill, MCP, and replay cassettes - **no API keys**.
 
 ```bash
 cd testdata/toy-agent
@@ -92,8 +92,8 @@ snapshot ghi789…  artifacts=12  manifest=jkl012…
 Changed AI artifacts:
   ~ prompt:system-prompt (a1b2c3d4 → e5f6a7b8)
 
-Blast radius — agents: support-bot
-Blast radius — evals:  default
+Blast radius - agents: support-bot
+Blast radius - evals:  default
 ```
 
 Run cheap replay evals and emit the PR body:
@@ -129,7 +129,7 @@ Blast radius: agents **support-bot**
 | `task_success` | 100.0% | [47.8%, 100.0%] | **PASS** | no significant regression (delta CI [-0.02, 0.02]) |
 ```
 
-Flip the story — expand MCP power instead of a prompt:
+Flip the story - expand MCP power instead of a prompt:
 
 ```bash
 # e.g. add "write" under local-fs permissions in apm.lock.yaml
@@ -152,7 +152,7 @@ Run `airlock approve --base … --head …` to unblock.
 exit 1   # merge blocked until approved
 ```
 
-Flip it again — a prompt edit that quietly rides in with a new dependency (agent-driven supply chain):
+Flip it again - a prompt edit that quietly rides in with a new dependency (agent-driven supply chain):
 
 ```bash
 # edit prompts/system.md AND add a package under `packages:` in apm.lock.yaml
@@ -165,7 +165,7 @@ $ airlock diff --base aaee8c11172c86b1
 Changed AI artifacts:
   + dependency:left-pad
   ~ prompt:system-prompt (a68e98e0 → 31125b19)
-Blast radius — agents: support-bot
+Blast radius - agents: support-bot
 NEEDS_APPROVAL: new dependency: left-pad
 
 $ airlock ci --base aaee8c11172c86b1 --fail-on-approval
@@ -174,7 +174,7 @@ airlock ci: NEEDS_APPROVAL without ledger entry (run: airlock approve --base …
 exit 1   # merge blocked until: airlock approve --base … --head …
 ```
 
-A dependency added **on its own** (no prompt/skill/MCP/agent change alongside it) does not trigger this — that PR is Dependabot / SCA's job, not Airlock's. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
+A dependency added **on its own** (no prompt/skill/MCP/agent change alongside it) does not trigger this - that PR is Dependabot / SCA's job, not Airlock's. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
 
 That is the company wedge: **AI change control on the PR**, not “hope the prompt looks fine.”
 
@@ -188,7 +188,7 @@ That is the company wedge: **AI change control on the PR**, not “hope the prom
 
 ### Security in CI
 
-Airlock gates **AI release risk** on the PR — not general AppSec:
+Airlock gates **AI release risk** on the PR - not general AppSec:
 
 | Airlock blocks (with flags) | Still use elsewhere |
 |-----------------------------|---------------------|
@@ -198,7 +198,7 @@ Airlock gates **AI release risk** on the PR — not general AppSec:
 
 Skill / MCP power expansion → `NEEDS_APPROVAL`. Approvals are advisory until CI uses `--fail-on-approval`.
 
-**Supply chain (npm, crates.io, PyPI, …):** classic malware-in-the-lockfile is still Dependabot / SCA / provenance. Agents make it worse by proposing or merging deps at machine speed. Airlock’s angle is the **AI release surface**: when a prompt/skill/MCP/agent change also expands an APM-tracked package dependency, that lands in blast radius as `NEEDS_APPROVAL` (`--fail-on-approval` blocks merge) — a dep-only PR with no AI-artifact change is left to SCA. Not replacing package-manager security scanners. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
+**Supply chain (npm, crates.io, PyPI, …):** classic malware-in-the-lockfile is still Dependabot / SCA / provenance. Agents make it worse by proposing or merging deps at machine speed. Airlock’s angle is the **AI release surface**: when a prompt/skill/MCP/agent change also expands an APM-tracked package dependency, that lands in blast radius as `NEEDS_APPROVAL` (`--fail-on-approval` blocks merge) - a dep-only PR with no AI-artifact change is left to SCA. Not replacing package-manager security scanners. Details: [docs/ROADMAP.md](docs/ROADMAP.md#agent-driven-supply-chain).
 
 ### If you use LangSmith (or Braintrust / Langfuse / Phoenix)
 
@@ -282,7 +282,7 @@ flowchart TB
 | Langfuse / remote prompt registries | Not yet |
 | Live MCP schema fetch | HTTP(S) servers at scan time; stdio config-hash only |
 
-Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Airlock imports it. Details: [GUIDE — discovery](docs/GUIDE.md#discovery-coverage-honest).
+Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Airlock imports it. Details: [GUIDE - discovery](docs/GUIDE.md#discovery-coverage-honest).
 
 ## Commands
 
@@ -308,16 +308,16 @@ Gates fire only when a confidence interval **excludes** the threshold. Cassettes
 | Phase | Status | Scope |
 |-------|--------|--------|
 | **0–4** | **Done (OSS beta)** | Release gate: manifest → diff → eval → policy → CI Action (+ Sentinel, stack scan, eval flexibility) |
-| **Next** | Proof | 10–20 teams with Action on real agent PRs — harden gate, don’t rush SaaS |
+| **Next** | Proof | 10–20 teams with Action on real agent PRs - harden gate, don’t rush SaaS |
 | **5** | Later | Team control plane (open-core paid) |
 | **6** | Later | Enterprise platform (SSO, EU, admission, publish gate) |
-| **7** | Later | Release agent (investigate / rollback / PR) — only after gate trusted |
+| **7** | Later | Release agent (investigate / rollback / PR) - only after gate trusted |
 
 ```text
 OSS release gate (now)  →  prove in CI  →  Phase 5 team plane  →  Phase 6 enterprise  →  Phase 7 release agent
 ```
 
-**Details:** [docs/ROADMAP.md](docs/ROADMAP.md) — thesis, open-core, integration maps, explicit non-goals (incl. “not code test selection”).
+**Details:** [docs/ROADMAP.md](docs/ROADMAP.md) - thesis, open-core, integration maps, explicit non-goals (incl. “not code test selection”).
 
 Design-partner outreach continues (process, not a phase). Release notes: [CHANGELOG.md](CHANGELOG.md).
 

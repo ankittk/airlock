@@ -55,4 +55,7 @@ func TestLiveMCPSchemaFetch(t *testing.T) {
 	if !strings.Contains(m.MCPServers[0].Source, "mcp-live") {
 		t.Fatalf("expected mcp-live source tag, got %q", m.MCPServers[0].Source)
 	}
+	if len(m.MCPServers[0].ToolNames) != 1 || m.MCPServers[0].ToolNames[0] != "read_file" {
+		t.Fatalf("expected ToolNames [read_file], got %v", m.MCPServers[0].ToolNames)
+	}
 }

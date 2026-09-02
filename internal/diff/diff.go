@@ -182,6 +182,20 @@ func permissionExpansion(base, head *manifest.Snapshot, changes []Change) (bool,
 						break
 					}
 				}
+				// Live tools/list diff: Permissions is only ever hand-maintained
+				// via apm.lock.yaml, so a server whose actual tool list grows
+				// (discovered live, see mcp_fetch.go) would otherwise pass
+				// through as a bare "changed" with no approval signal at all.
+				for _, name := range m.ToolNames {
+					if slices.Contains(old.ToolNames, name) {
+						continue
+					}
+					if looksWriteTool(name) {
+						reasons = append(reasons, "MCP new write-looking tool "+name+" on "+m.ID)
+					} else {
+						reasons = append(reasons, "MCP new tool (needs review): "+name+" on "+m.ID)
+					}
+				}
 			}
 		}
 	}

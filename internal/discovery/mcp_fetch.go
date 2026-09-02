@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -40,7 +41,7 @@ func enrichMCPSchemas(ctx context.Context, client *http.Client, m *manifest.Mani
 		if !strings.HasPrefix(strings.ToLower(cfg.URL), "http") {
 			continue
 		}
-		schema, err := fetchMCPToolsSchema(ctx, client, cfg)
+		schema, toolNames, err := fetchMCPToolsSchema(ctx, client, cfg)
 		if err != nil {
 			m.Unpinned = append(m.Unpinned, manifest.UnpinnedRisk{
 				Artifact: "mcp:" + m.MCPServers[i].ID,
@@ -55,22 +56,40 @@ func enrichMCPSchemas(ctx context.Context, client *http.Client, m *manifest.Mani
 				m.MCPServers[i].Source += "+mcp-live"
 			}
 		}
+		// Always refresh, independent of SchemaHash equality: this is the field
+		// diff.permissionExpansion reads to catch new tools appearing on a
+		// server whose Permissions[] was never hand-maintained.
+		m.MCPServers[i].ToolNames = toolNames
 	}
 }
 
-func fetchMCPToolsSchema(ctx context.Context, client *http.Client, cfg mcpServerCfg) ([]byte, error) {
+func fetchMCPToolsSchema(ctx context.Context, client *http.Client, cfg mcpServerCfg) ([]byte, []string, error) {
 	if err := mcpRPC(ctx, client, cfg, "initialize", map[string]any{
 		"protocolVersion": "2024-11-05",
 		"capabilities":    map[string]any{},
 		"clientInfo":      map[string]string{"name": "airlock", "version": "1"},
 	}); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	var tools any
-	if err := mcpRPCResult(ctx, client, cfg, "tools/list", map[string]any{}, &tools); err != nil {
-		return nil, err
+	var raw json.RawMessage
+	if err := mcpRPCResult(ctx, client, cfg, "tools/list", map[string]any{}, &raw); err != nil {
+		return nil, nil, err
 	}
-	return json.Marshal(tools)
+	var parsed struct {
+		Tools []struct {
+			Name string `json:"name"`
+		} `json:"tools"`
+	}
+	var names []string
+	if err := json.Unmarshal(raw, &parsed); err == nil {
+		for _, t := range parsed.Tools {
+			if t.Name != "" {
+				names = append(names, t.Name)
+			}
+		}
+		sort.Strings(names)
+	}
+	return raw, names, nil
 }
 
 func mcpRPC(ctx context.Context, client *http.Client, cfg mcpServerCfg, method string, params any) error {

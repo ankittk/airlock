@@ -174,8 +174,8 @@ Show the company wedge: MCP permission expansion → human gate.
 
 From `testdata/toy-agent` (after `airlock init && airlock snapshot`):
 
-1. Widen MCP permissions in `apm.lock.yaml` (e.g. add `write` under `local-fs.permissions`) **or** edit the discovered MCP config so the schema/permissions hash changes toward more power.
-2. `airlock snapshot && airlock diff` — expect `NEEDS_APPROVAL` / MCP permission reasons.
+1. Widen MCP permissions in `apm.lock.yaml` (e.g. add `write` under `local-fs.permissions`) **or**, for an HTTP(S) server, let the server itself grow a new tool — the live `tools/list` fetch diffs tool names directly, so this fires even when nobody hand-maintains `permissions:`.
+2. `airlock snapshot && airlock diff` — expect `NEEDS_APPROVAL` / MCP permission (or new-tool) reasons.
 3. `airlock ci --comment --fail-on-approval` — non-zero exit until approved.
 4. `airlock approve --base <base-snap> --head <head-snap>` then re-run `ci` (or merge after the ledger records approval).
 

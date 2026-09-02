@@ -76,7 +76,13 @@ type MCPServer struct {
 	Name        string   `json:"name,omitempty"`
 	SchemaHash  string   `json:"schema_hash"`
 	Permissions []string `json:"permissions,omitempty"`
-	Source      string   `json:"source,omitempty"`
+	// ToolNames is the live tools/list result (HTTP(S) servers only — see
+	// enrichMCPSchemas). Populated independently of Permissions, which today
+	// is only ever set by hand-maintained apm.lock.yaml entries: this lets
+	// diff.permissionExpansion catch capability growth (a genuinely new tool
+	// appearing on the server) even when nobody declared it in Permissions.
+	ToolNames []string `json:"tool_names,omitempty"`
+	Source    string   `json:"source,omitempty"`
 }
 
 // Dependency is a non-AI package dependency (npm/pip/go/etc) tracked for the
