@@ -454,7 +454,8 @@ func scanSkills(root string, m *manifest.Manifest) error {
 			if !e.IsDir() {
 				continue
 			}
-			skillMD := filepath.Join(base, e.Name(), "SKILL.md")
+			skillDir := filepath.Join(base, e.Name())
+			skillMD := filepath.Join(skillDir, "SKILL.md")
 			if _, err := os.Stat(skillMD); err != nil {
 				continue
 			}
@@ -463,7 +464,10 @@ func scanSkills(root string, m *manifest.Manifest) error {
 			if seen[id] || seen[relPath] {
 				continue
 			}
-			h, err := manifest.HashFile(skillMD)
+			// Hash the whole skill directory, not just SKILL.md: a skill is
+			// commonly SKILL.md plus scripts/resources beside it, and a change
+			// to one of those without touching SKILL.md must still register.
+			h, err := manifest.HashDirTree(skillDir)
 			if err != nil {
 				m.Unpinned = append(m.Unpinned, manifest.UnpinnedRisk{Artifact: "skill:" + id, Reason: err.Error()})
 				continue

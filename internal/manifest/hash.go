@@ -3,6 +3,7 @@ package manifest
 import (
 	"encoding/hex"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
@@ -59,4 +60,31 @@ func HashTree(root string, rels []string) (string, error) {
 		b.WriteByte('\n')
 	}
 	return HashString(b.String()), nil
+}
+
+// HashDirTree hashes every regular file under dir, recursively, keyed by its
+// path relative to dir. Some artifacts are really a directory (an entry-point
+// file plus sibling scripts/resources) rather than one file — hashing only
+// the entry point misses changes to everything beside it. Symlinks are not
+// followed (WalkDir uses Lstat), so a symlink loop can't hang this.
+func HashDirTree(dir string) (string, error) {
+	var rels []string
+	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		rel, relErr := filepath.Rel(dir, p)
+		if relErr != nil {
+			return relErr
+		}
+		rels = append(rels, rel)
+		return nil
+	})
+	if err != nil {
+		return "", err
+	}
+	return HashTree(dir, rels)
 }
