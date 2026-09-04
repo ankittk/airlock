@@ -229,7 +229,7 @@ A full **AI release stack**, not a single command:
 | **AI Manifest** | Normalized graph of agents, models, prompts, tools, skills, MCP, judges, evals (imports [APM](https://github.com/microsoft/apm) lockfiles) |
 | **Release Snapshot** | Content-addressed record of everything needed to reproduce behavior |
 | **Behavioral Diff** | What changed + blast radius; statistical candidate vs baseline (CIs, not point estimates) |
-| **Policy Engine** | Gates → `PASS` / `FAIL` / `INCONCLUSIVE` / `NEEDS_APPROVAL` |
+| **Policy Engine** | Gates → `PASS` / `FAIL` / `INCONCLUSIVE` / `NEEDS_APPROVAL` (comparative gates show `SKIPPED` with no baseline yet — never fails closed on its own) |
 | **Cassette Store** | Deterministic replay of provider/tool HTTP for cheap CI |
 | **Judge Registry** | Pinned, versioned, calibrated evaluators |
 | **Production-derived evals** | OTel ingest + local redaction → baselines |

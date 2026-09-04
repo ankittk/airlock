@@ -15,6 +15,11 @@ const (
 	Fail          VerdictKind = "FAIL"
 	Inconclusive  VerdictKind = "INCONCLUSIVE"
 	NeedsApproval VerdictKind = "NEEDS_APPROVAL"
+	// Skipped marks a comparative gate (regression / new-critical delta) that
+	// has no baseline result to pair against. It never merges into Overall —
+	// the point is only to keep the gate visible in the report instead of it
+	// vanishing with zero trace, the way it did before this existed.
+	Skipped VerdictKind = "SKIPPED"
 )
 
 type Policy struct {
@@ -109,9 +114,22 @@ func Evaluate(p Policy, metrics []MetricRates) Report {
 			continue
 		}
 		hasMin := spec.Min != nil
-		hasReg := spec.MaxRegressionPP != nil && len(m.BasePass) > 0 && len(m.CandPass) > 0
-		hasCrit := spec.MaxNewCritical != nil && len(m.BasePass) > 0 && len(m.CandPass) > 0
+		hasBaselinePairs := len(m.BasePass) > 0 && len(m.CandPass) > 0
+		comparativeConfigured := spec.MaxRegressionPP != nil || spec.MaxNewCritical != nil
+		hasReg := spec.MaxRegressionPP != nil && hasBaselinePairs
+		hasCrit := spec.MaxNewCritical != nil && hasBaselinePairs
 		if !hasMin && !hasReg && !hasCrit {
+			if comparativeConfigured && !hasBaselinePairs {
+				// A gate configured with only MaxRegressionPP/MaxNewCritical (no
+				// Min) has nothing else to evaluate without a baseline — it used
+				// to just vanish from the report here with zero trace. Surface it
+				// as SKIPPED instead so "no baseline yet" is visible, not silent.
+				out.Metrics = append(out.Metrics, MetricEvidence{
+					Name:    m.Name,
+					Verdict: Skipped,
+					Reason:  "no baseline result to compare against — run `airlock baseline create` (or pass --base) to enable this gate",
+				})
+			}
 			continue
 		}
 		level := spec.Confidence
@@ -176,6 +194,12 @@ func Evaluate(p Policy, metrics []MetricRates) Report {
 			}
 		}
 
+		if comparativeConfigured && !hasBaselinePairs {
+			// Min gate already produced a row above, but its regression/critical-
+			// delta half was quietly not evaluated — say so instead of leaving
+			// that half invisible inside an otherwise-normal PASS/FAIL row.
+			ev.Reason += " (no baseline: regression/critical-delta check skipped)"
+		}
 		out.Metrics = append(out.Metrics, ev)
 		overall = merge(overall, ev.Verdict)
 	}
