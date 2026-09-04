@@ -115,6 +115,7 @@ airlock import promptfoo promptfoo.yaml
 
 airlock ci --comment                # markdown for PR bodies
 airlock ci --fail-on-eval
+airlock ci --fail-on-inconclusive   # also fail closed when a gate can't resolve PASS/FAIL (see below)
 airlock ci --fail-on-approval       # block until approve on permission / skill expansion
 ```
 
@@ -128,6 +129,8 @@ Airlock is an **AI change-control** gate, not a replacement for AppSec scanners.
 - **Does not:** CodeQL, dependency CVEs, whole-repo secret scanning — keep those jobs.
 
 Company default: `--fail-on-approval` (and usually `--fail-on-eval`). Approvals are advisory until that flag is set.
+
+`--fail-on-eval` only trips on a `FAIL` verdict. With default thresholds (`0.99`/`0.995` min) and the default `max_samples_per_case: 5`, a metric's confidence interval can straddle the min forever — stuck `INCONCLUSIVE`, never resolving to `PASS` or `FAIL`, and CI stays green. Add `--fail-on-inconclusive` to fail closed on that too (raise `max_samples_per_case` or widen the gate to actually resolve it instead of gating on it forever).
 
 ### Approvals & rollback
 
@@ -220,7 +223,7 @@ Anything discoverable but not hashable should show up as an **unpinned risk** in
 | Where | CLI in agent repo | Same + CI workflow in **app** repos |
 | Loop | init → snapshot → diff → test | + `ci` on PRs, approvals, policy |
 | Prod | optional ingest / drift | baselines from redacted OTel |
-| Fail closed | optional | `--fail-on-eval` / `--fail-on-approval` |
+| Fail closed | optional | `--fail-on-eval` / `--fail-on-inconclusive` / `--fail-on-approval` |
 
 ---
 

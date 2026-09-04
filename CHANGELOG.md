@@ -8,6 +8,8 @@ Versions follow [SemVer](https://semver.org/) with prerelease tags (`beta`, `rc`
 ## [Unreleased]
 
 ### Added
+- `airlock ci --fail-on-inconclusive`: `--fail-on-eval` alone only ever tripped CI on `FAIL`, so default thresholds (`0.99`/`0.995` min) against the default `max_samples_per_case: 5` could sit at `INCONCLUSIVE` indefinitely with nothing failing the build. The new flag fails closed on `INCONCLUSIVE` too (and still fails on `FAIL` when enabled alone).
+
 ### Changed
 ### Fixed
 
