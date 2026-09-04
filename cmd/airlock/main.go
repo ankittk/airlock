@@ -113,7 +113,7 @@ Commands:
   version / help
 
 test flags: --path --suite --affected --mode --json --baseline-results ID --adversarial
-ci flags:   --fail-on-change --fail-on-eval --fail-on-approval --fail-on-sentinel --comment --skip-eval --adversarial
+ci flags:   --fail-on-change --fail-on-eval --fail-on-inconclusive --fail-on-approval --fail-on-sentinel --comment --skip-eval --adversarial
 redact:     --redact pii|hash|off (ingest / baseline)
 
 Local-first. No cloud upload.
@@ -392,6 +392,29 @@ func affectedAgents(root string) ([]string, error) {
 	return diff.Compare(base, head).AffectedAgents, nil
 }
 
+// evalGateErr maps an eval Report's overall verdict to a CI exit decision.
+// --fail-on-eval alone only trips on FAIL: default thresholds (0.99/0.995 min)
+// vs default sample size (max_samples_per_case: 5) can leave a metric
+// straddling the min forever, stuck at INCONCLUSIVE with nothing failing CI.
+// --fail-on-inconclusive closes that gap (and, since FAIL is strictly worse
+// than INCONCLUSIVE, also covers FAIL so enabling it alone still fails closed).
+func evalGateErr(report *policy.Report, failEval, failInconclusive bool) error {
+	if report == nil {
+		return nil
+	}
+	switch report.Overall {
+	case policy.Fail:
+		if failEval || failInconclusive {
+			return fmt.Errorf("eval verdict FAIL")
+		}
+	case policy.Inconclusive:
+		if failInconclusive {
+			return fmt.Errorf("eval verdict INCONCLUSIVE (raise max_samples_per_case or widen the gate to resolve)")
+		}
+	}
+	return nil
+}
+
 func cmdCI(args []string) error {
 	root, args, err := rootFromArgs(args)
 	if err != nil {
@@ -399,6 +422,7 @@ func cmdCI(args []string) error {
 	}
 	args, failFlag := flagBool(args, "--fail-on-change")
 	args, failEval := flagBool(args, "--fail-on-eval")
+	args, failInconclusive := flagBool(args, "--fail-on-inconclusive")
 	args, failApproval := flagBool(args, "--fail-on-approval")
 	args, failSentinel := flagBool(args, "--fail-on-sentinel")
 	args, commentOnly := flagBool(args, "--comment")
@@ -489,8 +513,8 @@ func cmdCI(args []string) error {
 	if fail && diff.HasChanges(dr) {
 		return fmt.Errorf("AI artifacts changed (fail_on_ai_change)")
 	}
-	if failEval && evalReport != nil && evalReport.Overall == policy.Fail {
-		return fmt.Errorf("eval verdict FAIL")
+	if err := evalGateErr(evalReport, failEval, failInconclusive); err != nil {
+		return err
 	}
 	if failApproval {
 		if err := approval.Require(store.ForRoot(root).Approvals, base.ID, head.ID, dr.NeedsApproval); err != nil {

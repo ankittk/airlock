@@ -290,7 +290,7 @@ Agent dependency locking is [APM](https://github.com/microsoft/apm)’s job; Air
 |---------|------------|
 | `init` / `snapshot` / `diff` | Manifest discovery, release snapshots, blast-radius diff |
 | `test` / `ci` | Statistical evals + PR release decision |
-| `ci --fail-on-eval` / `--fail-on-approval` | Fail closed (company default) |
+| `ci --fail-on-eval` / `--fail-on-inconclusive` / `--fail-on-approval` | Fail closed (company default) |
 | `import promptfoo\|langsmith\|braintrust` | Bring existing eval corpora |
 | `eval promote --from ingest\|results` | Promote failed runs → eval cases |
 | `ingest otel` / `baseline create` / `drift` | Production loop |
