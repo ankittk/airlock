@@ -134,6 +134,44 @@ func TestScanSkillsWithoutAPM(t *testing.T) {
 	}
 }
 
+// A skill is commonly SKILL.md plus scripts/resources beside it. A change to
+// one of those, with SKILL.md itself untouched, must still register as a
+// skill change — skill hashing must cover the whole directory, not just the
+// entry-point file.
+func TestScanSkillsDetectsSiblingScriptChange(t *testing.T) {
+	dir := t.TempDir()
+	skillDir := filepath.Join(dir, ".claude", "skills", "ship-check")
+	scriptsDir := filepath.Join(skillDir, "scripts")
+	if err := os.MkdirAll(scriptsDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(skillDir, "SKILL.md"), []byte("# Ship check\nVerify release gates.\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	scriptPath := filepath.Join(scriptsDir, "check.sh")
+	if err := os.WriteFile(scriptPath, []byte("echo v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	base, err := snapshot.FromWorkingTree(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Only the sibling script changes — SKILL.md stays byte-for-byte the same.
+	if err := os.WriteFile(scriptPath, []byte("echo v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	head, err := snapshot.FromWorkingTree(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := diff.Compare(base, head)
+	if !diff.HasKind(r, "skill") {
+		t.Fatalf("expected sibling script edit to register as a skill change, got %+v", r.Changes)
+	}
+}
+
 func copyTree(src, dst string) error {
 	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
