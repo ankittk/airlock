@@ -5,8 +5,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/xslices"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/xslices"
 )
 
 // Change is one artifact that added, removed, or changed hash.

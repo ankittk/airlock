@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/evalcase"
-	"github.com/ankittk/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/policy"
 )
 
 func TestBudgetStop(t *testing.T) {

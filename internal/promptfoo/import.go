@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
 	"gopkg.in/yaml.v3"
 )
 

@@ -3,8 +3,8 @@ package diff_test
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/diff"
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/diff"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 func TestNeedsApprovalOnWriteTool(t *testing.T) {

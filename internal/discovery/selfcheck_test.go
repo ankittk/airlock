@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/diff"
-	"github.com/ankittk/airlock/internal/discovery"
-	"github.com/ankittk/airlock/internal/snapshot"
+	"github.com/xdlc-labs/airlock/internal/diff"
+	"github.com/xdlc-labs/airlock/internal/discovery"
+	"github.com/xdlc-labs/airlock/internal/snapshot"
 )
 
 // Self-check: import fixture → snapshot → mutate prompt → diff lists prompt + agent.

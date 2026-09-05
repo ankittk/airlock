@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/langsmith"
+	"github.com/xdlc-labs/airlock/internal/langsmith"
 )
 
 func TestImportFile(t *testing.T) {

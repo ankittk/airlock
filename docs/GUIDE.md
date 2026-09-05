@@ -79,11 +79,11 @@ airlock ci --comment
 
 ## Install
 
-Pin a pre-release tag from [Releases](https://github.com/ankittk/airlock/releases) (or copy the command from [README — Install](../README.md#install)). GitHub “latest” skips pre-releases.
+Pin a pre-release tag from [Releases](https://github.com/xdlc-labs/airlock/releases) (or copy the command from [README — Install](../README.md#install)). GitHub “latest” skips pre-releases.
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=<tag> bash
-# or: go install github.com/ankittk/airlock/cmd/airlock@<tag>   # Go 1.25+
+curl -sSL https://raw.githubusercontent.com/xdlc-labs/airlock/main/install.sh | AIRLOCK_VERSION=<tag> bash
+# or: go install github.com/xdlc-labs/airlock/cmd/airlock@<tag>   # Go 1.25+
 ```
 
 Maintainers cutting releases: see [RELEASING.md](RELEASING.md).

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/snapshot"
-	"github.com/ankittk/airlock/internal/store"
+	"github.com/xdlc-labs/airlock/internal/snapshot"
+	"github.com/xdlc-labs/airlock/internal/store"
 )
 
 // TestCmdCIFailOnApprovalStillGatesWithComment guards a regression where

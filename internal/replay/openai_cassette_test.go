@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/replay"
+	"github.com/xdlc-labs/airlock/internal/replay"
 )
 
 func TestOpenAIShapedCassetteReplay(t *testing.T) {

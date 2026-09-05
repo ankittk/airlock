@@ -12,11 +12,11 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/ankittk/airlock/internal/boundary"
-	"github.com/ankittk/airlock/internal/evalcase"
-	"github.com/ankittk/airlock/internal/policy"
-	"github.com/ankittk/airlock/internal/providers"
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/boundary"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/providers"
+	"github.com/xdlc-labs/airlock/internal/stats"
 	"golang.org/x/sync/errgroup"
 	"golang.org/x/sync/semaphore"
 )

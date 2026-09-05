@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/policy"
 )
 
 // TestEvalGateErr guards the fail-closed mapping from eval verdict to CI exit

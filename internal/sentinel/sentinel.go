@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/providers"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/providers"
 )
 
 const PromptVersion = "AIRLOCK_SENTINEL_v1"

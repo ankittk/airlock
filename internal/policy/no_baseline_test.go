@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/policy"
 )
 
 // A pure comparative gate (only MaxRegressionPP/MaxNewCritical, no Min — the

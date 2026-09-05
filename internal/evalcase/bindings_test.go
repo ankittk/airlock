@@ -3,7 +3,7 @@ package evalcase_test
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
 )
 
 func TestSelectSuitesSpecificity(t *testing.T) {

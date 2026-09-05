@@ -15,7 +15,7 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 ## Development setup
 
 ```bash
-git clone https://github.com/ankittk/airlock.git
+git clone https://github.com/xdlc-labs/airlock.git
 cd airlock
 go test ./... -count=1
 go build -o airlock ./cmd/airlock

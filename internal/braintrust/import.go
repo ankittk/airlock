@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ankittk/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
 )
 
 // ImportFile reads Braintrust JSONL export into Airlock eval cases.

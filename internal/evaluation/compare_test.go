@@ -3,9 +3,9 @@ package evaluation_test
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/evaluation"
-	"github.com/ankittk/airlock/internal/policy"
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/evaluation"
+	"github.com/xdlc-labs/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/stats"
 )
 
 func TestCompareResults(t *testing.T) {

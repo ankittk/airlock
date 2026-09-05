@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/stats"
 	"gopkg.in/yaml.v3"
 )
 

@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/evalcase"
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/providers"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/providers"
 )
 
 // Spec is a pinned judge declared in .airlock/judges/<id>.json or judges.yml entry.

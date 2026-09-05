@@ -4,9 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/evalcase"
-	"github.com/ankittk/airlock/internal/judge"
-	"github.com/ankittk/airlock/internal/providers"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/judge"
+	"github.com/xdlc-labs/airlock/internal/providers"
 )
 
 func TestMultiTurnJudge(t *testing.T) {

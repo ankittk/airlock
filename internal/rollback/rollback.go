@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/store"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/store"
 )
 
 // Decision is a machine-readable routing hint for gateways (LiteLLM/Portkey/etc).

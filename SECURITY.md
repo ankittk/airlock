@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-**Public beta** — use tagged releases only ([CHANGELOG](CHANGELOG.md) / [Releases](https://github.com/ankittk/airlock/releases)).
+**Public beta** — use tagged releases only ([CHANGELOG](CHANGELOG.md) / [Releases](https://github.com/xdlc-labs/airlock/releases)).
 
 Security fixes land on `main` and ship in the next tagged release. Untagged `main` / `go install @latest` may differ from a release binary.
 

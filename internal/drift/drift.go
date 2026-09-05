@@ -3,9 +3,9 @@ package drift
 import (
 	"fmt"
 
-	"github.com/ankittk/airlock/internal/collector"
-	"github.com/ankittk/airlock/internal/policy"
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/collector"
+	"github.com/xdlc-labs/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/stats"
 )
 
 type Report struct {

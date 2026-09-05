@@ -3,8 +3,8 @@ package evaluation
 import (
 	"fmt"
 
-	"github.com/ankittk/airlock/internal/collector"
-	"github.com/ankittk/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/collector"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
 )
 
 // PromoteFromIngest appends OTel ingest spans as eval cases (optionally failures only).

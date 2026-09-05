@@ -3,7 +3,7 @@ package policy_test
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/policy"
 )
 
 func TestMaxNewCritical(t *testing.T) {

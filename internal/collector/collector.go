@@ -8,8 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/evalcase"
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 // Span is a minimal OTel GenAI-ish JSONL record.

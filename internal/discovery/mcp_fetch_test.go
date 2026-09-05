@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 func TestLiveMCPSchemaFetch(t *testing.T) {

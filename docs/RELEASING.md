@@ -27,7 +27,7 @@ git push origin vX.Y.Z
 6. Smoke:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=vX.Y.Z bash
+curl -sSL https://raw.githubusercontent.com/xdlc-labs/airlock/main/install.sh | AIRLOCK_VERSION=vX.Y.Z bash
 airlock version
 ```
 

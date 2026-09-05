@@ -1,4 +1,4 @@
-module github.com/ankittk/airlock
+module github.com/xdlc-labs/airlock
 
 go 1.25.0
 

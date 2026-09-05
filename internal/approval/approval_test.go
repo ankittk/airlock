@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/approval"
+	"github.com/xdlc-labs/airlock/internal/approval"
 )
 
 func TestLedger(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ankittk/airlock/internal/discovery"
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/store"
+	"github.com/xdlc-labs/airlock/internal/discovery"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/store"
 )
 
 // Create scans root (or uses existing manifest), builds a content-addressed snapshot, persists it.

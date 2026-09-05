@@ -6,7 +6,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/ankittk/airlock/internal/evalcase"
+	"github.com/xdlc-labs/airlock/internal/evalcase"
 )
 
 // ImportFile reads a LangSmith dataset export JSON into Airlock eval cases.

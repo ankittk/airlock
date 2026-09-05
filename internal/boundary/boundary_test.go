@@ -3,7 +3,7 @@ package boundary_test
 import (
 	"testing"
 
-	"github.com/ankittk/airlock/internal/boundary"
+	"github.com/xdlc-labs/airlock/internal/boundary"
 )
 
 func TestScan(t *testing.T) {

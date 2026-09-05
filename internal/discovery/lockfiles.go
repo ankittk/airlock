@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 // ponytail: line/regex parsers for lockfiles; upgrade path = ecosystem-native parsers.

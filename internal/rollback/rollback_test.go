@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/rollback"
-	"github.com/ankittk/airlock/internal/store"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/rollback"
+	"github.com/xdlc-labs/airlock/internal/store"
 )
 
 func TestRestoreAndHint(t *testing.T) {

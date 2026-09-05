@@ -8,10 +8,10 @@ Airlock is the release-control layer for AI systems: it treats models, prompts, 
 
 The open-source distribution is a local-first Go toolchain (binary + CI Action + `.airlock/` store). Prove that gate in CI first; the hosted control plane comes later (open-core).
 
-[![CI](https://github.com/ankittk/airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/ankittk/airlock/actions/workflows/ci.yml)
+[![CI](https://github.com/xdlc-labs/airlock/actions/workflows/ci.yml/badge.svg)](https://github.com/xdlc-labs/airlock/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Go](https://img.shields.io/badge/go-1.25+-00ADD8?logo=go&logoColor=white)](go.mod)
-[![Release](https://img.shields.io/github/v/release/ankittk/airlock?include_prereleases)](https://github.com/ankittk/airlock/releases)
+[![Release](https://img.shields.io/github/v/release/xdlc-labs/airlock?include_prereleases)](https://github.com/xdlc-labs/airlock/releases)
 
 > First public beta · no telemetry · [Apache-2.0](LICENSE) · state under `.airlock/` · versions in [CHANGELOG](CHANGELOG.md)  
 > **APM** tells you what the agent depends on · **eval platforms** tell you how it scored · **Airlock** tells you whether that change is safe to ship.  
@@ -55,11 +55,11 @@ State lives under **`.airlock/`** in your **application** repo. Nothing uploads 
 ## Install
 
 **Platforms:** Linux / macOS · `amd64` / `arm64` (Windows not yet).  
-Pin a **pre-release** tag from [Releases](https://github.com/ankittk/airlock/releases) (GitHub “latest” skips them). Current tag: see [CHANGELOG](CHANGELOG.md).
+Pin a **pre-release** tag from [Releases](https://github.com/xdlc-labs/airlock/releases) (GitHub “latest” skips them). Current tag: see [CHANGELOG](CHANGELOG.md).
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/ankittk/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.6 bash
-# or: go install github.com/ankittk/airlock/cmd/airlock@v0.1.0-beta.6
+curl -sSL https://raw.githubusercontent.com/xdlc-labs/airlock/main/install.sh | AIRLOCK_VERSION=v0.1.0-beta.6 bash
+# or: go install github.com/xdlc-labs/airlock/cmd/airlock@v0.1.0-beta.6
 ```
 
 ## Quick start - break a prompt, watch Airlock catch it

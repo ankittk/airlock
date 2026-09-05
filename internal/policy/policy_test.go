@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/stats"
 )
 
 func TestEvaluateFailWhenCIExcludesMin(t *testing.T) {

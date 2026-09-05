@@ -4,7 +4,7 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/xslices"
+	"github.com/xdlc-labs/airlock/internal/xslices"
 )
 
 func TestUniqueSorted(t *testing.T) {

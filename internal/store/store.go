@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 const (

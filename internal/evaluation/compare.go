@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/policy"
-	"github.com/ankittk/airlock/internal/stats"
+	"github.com/xdlc-labs/airlock/internal/policy"
+	"github.com/xdlc-labs/airlock/internal/stats"
 )
 
 // CompareRow is one metric in a candidate-vs-baseline experiment compare table.

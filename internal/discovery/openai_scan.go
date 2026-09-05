@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/ankittk/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/manifest"
 )
 
 // ponytail: regex + go/ast heuristics, not full Python/TS AST; upgrade path = tree-sitter per language.

@@ -2,7 +2,7 @@
 # Install airlock into the first writable of: $BINDIR, $GOBIN, $GOPATH/bin, $HOME/bin, /usr/local/bin
 set -euo pipefail
 
-REPO="ankittk/airlock"
+REPO="xdlc-labs/airlock"
 BIN_NAME="airlock"
 
 bin_dir() {

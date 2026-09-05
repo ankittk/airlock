@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/manifest"
-	"github.com/ankittk/airlock/internal/providers"
-	"github.com/ankittk/airlock/internal/sentinel"
+	"github.com/xdlc-labs/airlock/internal/manifest"
+	"github.com/xdlc-labs/airlock/internal/providers"
+	"github.com/xdlc-labs/airlock/internal/sentinel"
 )
 
 func TestProbeAndDetectDrift(t *testing.T) {

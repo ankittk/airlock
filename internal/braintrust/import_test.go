@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/ankittk/airlock/internal/braintrust"
+	"github.com/xdlc-labs/airlock/internal/braintrust"
 )
 
 func TestImportFile(t *testing.T) {
